@@ -17,8 +17,8 @@ _manager = AssistantManager()
 
 
 class StartConversationRequest(BaseModel):
-    tenant_id: str
-    user_id: str
+    tenant_id: str = "default"
+    user_id: str = "default"
 
 
 class SendMessageRequest(BaseModel):
@@ -39,7 +39,16 @@ class SuggestionsRequest(BaseModel):
 async def start_conversation(req: StartConversationRequest):
     """Iniciar una nueva conversacion con el asistente."""
     conversation = _manager.start_conversation(req.tenant_id, req.user_id)
-    return conversation.to_dict()
+    greeting = _manager.get_greeting_message()
+    return {
+        "conversation_id": conversation.conversation_id,
+        "message": {
+            "role": greeting.role,
+            "content": greeting.content,
+            "suggestions": greeting.suggestions,
+            "visual": greeting.visual,
+        },
+    }
 
 
 @router.post("/message")

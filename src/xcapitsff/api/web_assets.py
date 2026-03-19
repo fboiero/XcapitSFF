@@ -1100,46 +1100,37 @@ async function sendChatMessage() {
 }
 
 async function sendMessage(text) {
-    // Try playground first (start a session if needed)
+    // Use the conversational assistant (intent recognition + visual responses)
     try {
         if (!state.chatSessionId) {
-            const session = await apiFetch('/playground/start', {
+            const session = await apiFetch('/assistant/start', {
                 method: 'POST',
-                body: JSON.stringify({ agent_role: 'assistant' }),
+                body: JSON.stringify({ tenant_id: 'default', user_id: 'default' }),
             });
-            if (session?.session_id) {
-                state.chatSessionId = session.session_id;
+            if (session?.conversation_id) {
+                state.chatSessionId = session.conversation_id;
             }
         }
 
         if (state.chatSessionId) {
-            const result = await apiFetch(`/playground/${state.chatSessionId}/message`, {
+            const result = await apiFetch('/assistant/message', {
                 method: 'POST',
-                body: JSON.stringify({ message: text }),
+                body: JSON.stringify({
+                    conversation_id: state.chatSessionId,
+                    text: text,
+                }),
             });
-            if (result?.response) return result.response;
+            if (result?.content) {
+                // Store suggestions for rendering
+                if (result.suggestions) state.lastSuggestions = result.suggestions;
+                return result.content;
+            }
         }
     } catch (e) {
-        console.warn('Playground chat error:', e);
+        console.warn('Assistant error:', e);
     }
 
-    // Fallback: use agent-runner
-    try {
-        const result = await apiFetch('/agent-runner/run', {
-            method: 'POST',
-            body: JSON.stringify({
-                agent_name: 'assistant',
-                action: 'respond',
-                context: text,
-                context_type: 'chat',
-            }),
-        });
-        if (result?.response) return result.response;
-    } catch (e) {
-        console.warn('Agent runner error:', e);
-    }
-
-    // Final fallback: build a local response from dashboard data
+    // Fallback: build a local response from dashboard data
     return buildLocalResponse(text);
 }
 

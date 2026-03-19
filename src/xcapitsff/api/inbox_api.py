@@ -63,7 +63,7 @@ class TodaySummaryResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.get("/inbox", response_model=list[InboxItemResponse])
+@router.get("/inbox")
 async def api_get_inbox(
     limit: int = Query(default=50, le=200),
     db: AsyncSession = Depends(get_db),
@@ -72,22 +72,20 @@ async def api_get_inbox(
     items = await _inbox_manager.generate_inbox(db)
     result = []
     for item in items[:limit]:
-        result.append(
-            InboxItemResponse(
-                item_id=item.item_id,
-                type=item.type.value,
-                title=item.title,
-                subtitle=item.subtitle,
-                entity_type=item.entity_type,
-                entity_id=item.entity_id,
-                priority=item.priority,
-                action_url=item.action_url,
-                created_at=item.created_at.isoformat(),
-                is_read=item.is_read,
-                is_acted_on=item.is_acted_on,
-            )
-        )
-    return result
+        result.append({
+            "item_id": item.item_id,
+            "type": item.type.value,
+            "title": item.title,
+            "subtitle": item.subtitle,
+            "entity_type": item.entity_type,
+            "entity_id": item.entity_id,
+            "priority": item.priority,
+            "action_url": item.action_url,
+            "created_at": item.created_at.isoformat(),
+            "is_read": item.is_read,
+            "is_acted_on": item.is_acted_on,
+        })
+    return {"count": len(result), "items": result}
 
 
 @router.get("/inbox/count", response_model=InboxCountResponse)
