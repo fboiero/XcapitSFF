@@ -35,6 +35,14 @@ class VisualComponent:
     title: str = ""
     data: dict = field(default_factory=dict)
 
+    def to_dict(self) -> dict:
+        """Serialize the component for JSON transport."""
+        return {
+            "type": self.type.value if isinstance(self.type, VisualType) else self.type,
+            "title": self.title,
+            "data": self.data,
+        }
+
 
 def kpi_card(label: str, value, icon: str = "", trend: str = "", color: str = "#3b82f6") -> VisualComponent:
     return VisualComponent(VisualType.KPI_CARD, label, {
@@ -122,6 +130,22 @@ def chat_card(agent_name: str, message: str, confidence: float = 1.0) -> VisualC
     })
 
 
+def list_component(title: str, items: list[str | dict]) -> VisualComponent:
+    """Render a simple list of items (strings or dicts with label/value)."""
+    return VisualComponent(VisualType.LIST, title, {"items": items})
+
+
+def kanban(title: str, columns: list[dict], cards: list[dict] | None = None) -> VisualComponent:
+    """Render a kanban board.
+
+    columns: [{"id": "...", "label": "...", "color": "#...", "count": N}, ...]
+    cards:   [{"id": "...", "column": "...", "title": "...", "subtitle": "..."}, ...]
+    """
+    return VisualComponent(VisualType.KANBAN, title, {
+        "columns": columns, "cards": cards or [],
+    })
+
+
 # === Composite builders ===
 
 def build_lead_card(lead_data: dict) -> VisualComponent:
@@ -144,8 +168,8 @@ def build_lead_card(lead_data: dict) -> VisualComponent:
         lead_data.get("company_name", f"Lead #{lead_data.get('id', '?')}"),
         score, 100, classification, color,
         details=[
-            {"label": "Región", "value": lead_data.get("region", "?")},
-            {"label": "C-Level", "value": "Sí" if lead_data.get("c_level") else "No"},
+            {"label": "Region", "value": lead_data.get("region", "?")},
+            {"label": "C-Level", "value": "Si" if lead_data.get("c_level") else "No"},
             {"label": "Afinidad", "value": lead_data.get("afinidad", "?")},
             {"label": "Stage", "value": lead_data.get("stage", "raw")},
         ],
@@ -175,12 +199,12 @@ def build_dashboard_visuals(dashboard_data: dict) -> list[VisualComponent]:
     support = dashboard_data.get("support", {})
 
     # KPI cards
-    components.append(kpi_card("Total Leads", sales.get("total_leads", 0), "📊"))
-    components.append(kpi_card("Tickets Abiertos", support.get("open_tickets", 0), "🎫",
+    components.append(kpi_card("Total Leads", sales.get("total_leads", 0), "chart"))
+    components.append(kpi_card("Tickets Abiertos", support.get("open_tickets", 0), "ticket",
                                color="#f59e0b" if support.get("open_tickets", 0) > 10 else "#22c55e"))
-    components.append(kpi_card("Tasa de Conversión",
-                               f"{sales.get('conversion_rate', 0) or 0}%", "📈"))
-    components.append(kpi_card("Score Promedio", sales.get("avg_score", "N/A"), "⭐"))
+    components.append(kpi_card("Tasa de Conversion",
+                               f"{sales.get('conversion_rate', 0) or 0}%", "trend_up"))
+    components.append(kpi_card("Score Promedio", sales.get("avg_score", "N/A"), "star"))
 
     # Funnel
     funnel_data = sales.get("funnel", [])

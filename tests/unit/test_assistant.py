@@ -419,3 +419,314 @@ class TestConversationContext:
         assert "messages" in data
         assert isinstance(data["messages"], list)
         assert len(data["messages"]) >= 2
+
+
+# ===================================================================
+# NEW: Multi-strategy recognition tests
+# ===================================================================
+
+
+class TestMultiStrategyRecognition:
+    """Verify the four-tier recognition pipeline works correctly."""
+
+    def test_exact_command_confidence_is_highest(self):
+        """Exact commands should return confidence >= 0.95."""
+        r = IntentRecognizer()
+        match = r.recognize("hola")
+        assert match.confidence >= 0.95
+
+    def test_exact_command_with_trailing_punctuation(self):
+        """Exact commands should be recognized even with trailing punctuation."""
+        r = IntentRecognizer()
+        match = r.recognize("hola!")
+        assert match.intent == Intent.GREETING
+
+    def test_regex_match_confidence_range(self):
+        """Regex pattern matches should return confidence 0.80+."""
+        r = IntentRecognizer()
+        match = r.recognize("quiero ver todos los leads activos ahora mismo por favor")
+        assert match.intent == Intent.LIST_LEADS
+        assert match.confidence >= 0.80
+
+    def test_fuzzy_match_mostrame_leads(self):
+        """Colloquial 'mostrame los leads' should match via fuzzy keywords."""
+        r = IntentRecognizer()
+        match = r.recognize("mostrame los leads")
+        assert match.intent == Intent.LIST_LEADS
+        assert match.confidence >= 0.40
+
+    def test_contextual_fallback_with_company_only(self):
+        """When only a company name is found, contextual fallback guesses leads."""
+        r = IntentRecognizer()
+        match = r.recognize("algo sobre empresa TechCorp")
+        assert match.intent == Intent.LIST_LEADS
+        assert match.confidence <= 0.50
+
+
+# ===================================================================
+# NEW: Colloquial Spanish phrases
+# ===================================================================
+
+
+class TestColloquialSpanishPhrases:
+    """Verify expanded Spanish vocabulary from the requirements."""
+
+    def test_mostrame_leads(self):
+        r = IntentRecognizer()
+        match = r.recognize("mostrame los leads")
+        assert match.intent == Intent.LIST_LEADS
+
+    def test_quiero_ver_leads(self):
+        r = IntentRecognizer()
+        match = r.recognize("quiero ver leads")
+        assert match.intent == Intent.LIST_LEADS
+
+    def test_dame_los_tickets(self):
+        r = IntentRecognizer()
+        match = r.recognize("dame los tickets")
+        assert match.intent == Intent.LIST_TICKETS
+
+    def test_necesito_ver_oportunidades(self):
+        r = IntentRecognizer()
+        match = r.recognize("necesito oportunidades")
+        assert match.intent == Intent.LIST_LEADS
+
+    def test_generar_lead(self):
+        """'generar' as synonym for 'crear'."""
+        r = IntentRecognizer()
+        match = r.recognize("generar un lead")
+        assert match.intent == Intent.CREATE_LEAD
+
+    def test_armar_ticket(self):
+        """'armar' as synonym for 'crear'."""
+        r = IntentRecognizer()
+        match = r.recognize("armar un ticket")
+        assert match.intent == Intent.CREATE_TICKET
+
+    def test_hacer_prospecto(self):
+        """'hacer' as synonym for 'crear'."""
+        r = IntentRecognizer()
+        match = r.recognize("hacer un prospecto")
+        assert match.intent == Intent.CREATE_LEAD
+
+    def test_cuantos_tickets(self):
+        """'cuantos tickets' recognized as list tickets."""
+        r = IntentRecognizer()
+        match = r.recognize("cuantos tickets hay")
+        assert match.intent == Intent.LIST_TICKETS
+
+
+# ===================================================================
+# NEW: Compound intent detection
+# ===================================================================
+
+
+class TestCompoundIntentDetection:
+    """Verify multi-part requests are parsed with correct params."""
+
+    def test_leads_hot_de_latam(self):
+        """'mostrame los leads hot de LATAM' -> LIST_LEADS with classification and region."""
+        r = IntentRecognizer()
+        match = r.recognize("mostrame los leads hot de LATAM")
+        assert match.intent == Intent.LIST_LEADS
+        assert match.extracted_params.get("classification") == "hot"
+        assert match.extracted_params.get("region") == "LATAM"
+
+    def test_create_lead_para_acme_ceo(self):
+        """'crea un lead para Acme Corp, es CEO' -> CREATE_LEAD with company and c_level."""
+        r = IntentRecognizer()
+        match = r.recognize("crear un lead para Acme Corp, es CEO")
+        assert match.intent == Intent.CREATE_LEAD
+        assert "Acme" in match.extracted_params.get("company", "")
+        assert match.extracted_params.get("c_level") is True
+
+    def test_tickets_urgentes_abiertos(self):
+        """'cuantos tickets urgentes hay abiertos' -> LIST_TICKETS with priority and status."""
+        r = IntentRecognizer()
+        match = r.recognize("cuantos tickets urgentes hay abiertos")
+        assert match.intent == Intent.LIST_TICKETS
+        assert match.extracted_params.get("priority") == "urgent"
+        assert match.extracted_params.get("status") == "open"
+
+    def test_leads_calientes_argentina(self):
+        """Compound: leads + classification + region."""
+        r = IntentRecognizer()
+        match = r.recognize("ver leads calientes de Argentina")
+        assert match.intent == Intent.LIST_LEADS
+        assert match.extracted_params.get("classification") == "hot"
+        assert match.extracted_params.get("region") == "Argentina"
+
+    def test_enviar_email_contacto(self):
+        """Compound: outreach + channel."""
+        r = IntentRecognizer()
+        match = r.recognize("enviar email al contacto")
+        assert match.intent == Intent.COMPOSE_OUTREACH
+        assert match.extracted_params.get("channel") == "email"
+
+
+# ===================================================================
+# NEW: Entity extraction — expanded
+# ===================================================================
+
+
+class TestExpandedEntityExtraction:
+    """Test the new entity extraction capabilities."""
+
+    def test_extract_region_latam(self):
+        entities = extract_entities("leads de LATAM")
+        assert entities["region"] == "LATAM"
+
+    def test_extract_region_iberia(self):
+        entities = extract_entities("prospectos de Iberia")
+        assert entities["region"] == "Iberia"
+
+    def test_extract_region_mexico(self):
+        entities = extract_entities("clientes en México")
+        assert entities["region"] == "México"
+
+    def test_extract_priority_urgente(self):
+        entities = extract_entities("tickets urgentes pendientes")
+        assert entities["priority"] == "urgent"
+
+    def test_extract_priority_alta(self):
+        entities = extract_entities("prioridad alta")
+        assert entities["priority"] == "high"
+
+    def test_extract_classification_hot(self):
+        entities = extract_entities("leads hot")
+        assert entities["classification"] == "hot"
+
+    def test_extract_classification_calientes(self):
+        entities = extract_entities("prospectos calientes")
+        assert entities["classification"] == "hot"
+
+    def test_extract_stage_propuesta(self):
+        entities = extract_entities("leads en etapa propuesta")
+        assert entities["stage"] == "proposal"
+
+    def test_extract_stage_negociacion(self):
+        entities = extract_entities("oportunidades en negociacion")
+        assert entities["stage"] == "negotiation"
+
+    def test_extract_status_abiertos(self):
+        entities = extract_entities("tickets abiertos")
+        assert entities["status"] == "open"
+
+    def test_extract_channel_linkedin(self):
+        entities = extract_entities("enviar por linkedin")
+        assert entities["channel"] == "linkedin"
+
+    def test_extract_channel_whatsapp(self):
+        entities = extract_entities("mandar whatsapp")
+        assert entities["channel"] == "whatsapp"
+
+    def test_extract_contact_name(self):
+        entities = extract_entities("contacto Juan Perez")
+        assert entities["contact_name"] == "Juan Perez"
+
+    def test_extract_score_threshold(self):
+        entities = extract_entities("score mayor a 70")
+        assert entities["score_threshold"] == 70
+
+    def test_extract_high_icp(self):
+        entities = extract_entities("leads con ICP alto")
+        assert entities["high_icp"] is True
+
+    def test_extract_c_level(self):
+        entities = extract_entities("el contacto es CEO de la empresa")
+        assert entities["c_level"] is True
+
+    def test_extract_c_level_cto(self):
+        entities = extract_entities("hablar con el CTO")
+        assert entities["c_level"] is True
+
+
+# ===================================================================
+# NEW: Confidence calibration
+# ===================================================================
+
+
+class TestConfidenceCalibration:
+    """Verify that confidence levels match the expected tiers."""
+
+    def test_exact_command_confidence_098(self):
+        """Exact match should return 0.98."""
+        r = IntentRecognizer()
+        match = r.recognize("hola")
+        assert match.confidence == 0.98
+
+    def test_regex_confidence_above_080(self):
+        """Regex match on longer text should be >= 0.80."""
+        r = IntentRecognizer()
+        match = r.recognize("crear un lead nuevo para la empresa")
+        assert match.intent == Intent.CREATE_LEAD
+        assert match.confidence >= 0.80
+
+    def test_fuzzy_match_below_080(self):
+        """Known phrases should have high confidence."""
+        r = IntentRecognizer()
+        match = r.recognize("mostrame los leads")
+        assert match.confidence >= 0.60
+        assert match.intent == Intent.LIST_LEADS
+
+    def test_contextual_fallback_between_030_and_050(self):
+        """Contextual guesses should be in the 0.30-0.50 range."""
+        r = IntentRecognizer()
+        match = r.recognize("algo sobre empresa TechCorp")
+        assert 0.25 <= match.confidence <= 0.55
+
+    def test_unknown_confidence_zero(self):
+        """Completely unrecognized text returns confidence 0.0."""
+        r = IntentRecognizer()
+        match = r.recognize("xyzzy foobar baz")
+        assert match.confidence == 0.0
+
+    def test_short_exact_text_higher_than_long_regex(self):
+        """Short exact commands should have higher confidence than verbose regex matches."""
+        r = IntentRecognizer()
+        short = r.recognize("ver leads")
+        long_ = r.recognize("me gustaria poder ver todos los leads del equipo si es posible")
+        assert short.confidence > long_.confidence
+
+
+# ===================================================================
+# NEW: Context-aware fallback
+# ===================================================================
+
+
+class TestContextAwareFallback:
+    """Test that contextual guessing works on ambiguous input."""
+
+    def test_only_number_returns_search(self):
+        """Just a number should guess SEARCH."""
+        r = IntentRecognizer()
+        match = r.recognize("42")
+        assert match.intent == Intent.SEARCH
+        assert 42 in match.extracted_params.get("ids", [])
+        assert match.confidence <= 0.50
+
+    def test_urgente_alone_guesses_tickets(self):
+        """'urgente' alone should guess LIST_TICKETS via fuzzy/fallback."""
+        r = IntentRecognizer()
+        match = r.recognize("urgente")
+        assert match.intent == Intent.LIST_TICKETS
+
+    def test_company_name_alone_guesses_leads(self):
+        """A mention of a company should guess leads via contextual fallback."""
+        r = IntentRecognizer()
+        match = r.recognize("empresa TechCorp")
+        assert match.intent == Intent.LIST_LEADS
+
+    def test_icp_alto_guesses_qualify(self):
+        """'ICP alto' should guess QUALIFY_LEAD via contextual fallback."""
+        r = IntentRecognizer()
+        match = r.recognize("ICP alto")
+        assert match.intent == Intent.QUALIFY_LEAD
+
+    def test_score_mayor_a_70_guesses_qualify(self):
+        """'score mayor a 70' should guess QUALIFY_LEAD via fallback."""
+        r = IntentRecognizer()
+        match = r.recognize("score mayor a 70")
+        # score matches the qualify_lead regex pattern
+        assert match.intent == Intent.QUALIFY_LEAD
+        assert match.extracted_params.get("score_threshold") == 70

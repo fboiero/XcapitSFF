@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from .executor import ActionExecutor, ActionResult
 from .intent import Intent, IntentRecognizer
+from .visual import VisualComponent, action_card
 
 
 @dataclass
@@ -21,6 +22,7 @@ class AssistantMessage:
     role: str  # "user" | "assistant" | "system"
     content: str
     visual: dict | None = None
+    visual_components: list[dict] | None = None
     timestamp: str = ""
     suggestions: list[str] = field(default_factory=list)
 
@@ -49,6 +51,7 @@ class AssistantConversation:
                     "role": m.role,
                     "content": m.content,
                     "visual": m.visual,
+                    "visual_components": m.visual_components,
                     "timestamp": m.timestamp,
                     "suggestions": m.suggestions,
                 }
@@ -92,7 +95,7 @@ class AssistantManager:
         Steps:
         1. Recognise intent from user text
         2. Execute the corresponding action
-        3. Format response with visual data
+        3. Format response with visual components
         4. Add contextual suggestions
         5. Update conversation context
         """
@@ -110,22 +113,29 @@ class AssistantManager:
         # 2. Execute action
         result: ActionResult = self._executor.execute(intent_match, conversation.context)
 
-        # 3 & 4. Build assistant message
+        # 3. Serialize visual components from the executor
+        serialized_components: list[dict] | None = None
+        if result.visual_components:
+            serialized_components = [vc.to_dict() for vc in result.visual_components]
+
+        # 4. Build legacy visual_data for backward compatibility
         visual_data: dict | None = None
-        if result.result_data:
+        if result.result_data or serialized_components:
             visual_data = {
                 "type": result.visual_type,
                 "data": result.result_data,
             }
 
+        # 5. Build assistant message with both legacy and rich visual data
         assistant_msg = AssistantMessage(
             role="assistant",
             content=result.message,
             visual=visual_data,
+            visual_components=serialized_components,
             suggestions=result.next_suggestions,
         )
 
-        # 5. Update context
+        # 6. Update context
         self._update_context(conversation, intent_match, result)
 
         conversation.messages.append(assistant_msg)
@@ -139,7 +149,33 @@ class AssistantManager:
         return conversation
 
     def get_greeting_message(self) -> AssistantMessage:
-        """Build a context-aware welcome message."""
+        """Build a context-aware welcome message with rich visual components."""
+        # Build quickstart action cards
+        quickstart_cards = [
+            action_card(
+                "Ver Dashboard",
+                "Revisa tus metricas y KPIs en tiempo real",
+                "Abrir", "/api/v1/dashboard", icon="chart",
+            ),
+            action_card(
+                "Crear un Lead",
+                "Registra un nuevo prospecto en el pipeline",
+                "Crear", "/api/v1/leads", icon="add_person",
+            ),
+            action_card(
+                "Ver Tickets",
+                "Consulta los tickets de soporte abiertos",
+                "Ver", "/api/v1/tickets", icon="support",
+            ),
+            action_card(
+                "Buscar",
+                "Busca leads, tickets o clientes rapidamente",
+                "Buscar", "/api/v1/search", icon="search",
+            ),
+        ]
+
+        serialized_cards = [c.to_dict() for c in quickstart_cards]
+
         return AssistantMessage(
             role="assistant",
             content=(
@@ -159,6 +195,7 @@ class AssistantManager:
                     ],
                 },
             },
+            visual_components=serialized_cards,
             suggestions=[
                 "Ver el dashboard",
                 "Crear un nuevo lead",
