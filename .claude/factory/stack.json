@@ -1,0 +1,38 @@
+{
+  "detected_stacks": [
+    {
+      "name": "python-fastapi",
+      "type": "backend",
+      "language": "python",
+      "framework": "FastAPI",
+      "test_runner": "pytest",
+      "package_manager": "pip/hatch",
+      "confidence": "high",
+      "evidence": ["pyproject.toml", "src/xcapitsff/api/app.py", "src/xcapitsff/api/leads.py"]
+    },
+    {
+      "name": "ai-agents",
+      "type": "other",
+      "language": "python",
+      "framework": "anthropic-sdk",
+      "test_runner": "pytest",
+      "package_manager": "pip",
+      "confidence": "high",
+      "evidence": ["src/xcapitsff/agents/base.py", "src/xcapitsff/agents/sales.py", "src/xcapitsff/agents/support.py"]
+    },
+    {
+      "name": "docker-infra",
+      "type": "infra",
+      "language": null,
+      "framework": "docker-compose",
+      "test_runner": null,
+      "package_manager": null,
+      "confidence": "high",
+      "evidence": ["docker-compose.yml", "infra/docker/Dockerfile", ".github/workflows/ci.yml"]
+    }
+  ],
+  "primary_stack": "python-fastapi",
+  "multi_stack": true,
+  "has_contracts": false,
+  "detected_at": "2026-03-18T12:00:00Z"
+}
