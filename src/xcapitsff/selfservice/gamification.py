@@ -316,7 +316,7 @@ class GamificationEngine:
                 ua = UserAchievement(
                     user_id=user_id,
                     achievement_id=achievement.achievement_id,
-                    unlocked_at=datetime.utcnow(),
+                    unlocked_at=datetime.now(tz=None),
                     progress=100.0,
                 )
                 user_map[achievement.achievement_id] = ua

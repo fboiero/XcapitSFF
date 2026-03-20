@@ -135,7 +135,7 @@ class PlaygroundManager:
             raise KeyError(f"Session {session_id} not found")
 
         session.messages.append(("user", user_message))
-        session.last_active = datetime.utcnow()
+        session.last_active = datetime.now(tz=None)
 
         # Build conversation context from history
         history_lines = []
@@ -152,7 +152,7 @@ class PlaygroundManager:
 
         response_text = result.content
         session.messages.append(("agent", response_text))
-        session.last_active = datetime.utcnow()
+        session.last_active = datetime.now(tz=None)
 
         logger.debug(
             "Playground %s: message processed via %s",

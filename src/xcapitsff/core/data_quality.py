@@ -130,14 +130,14 @@ async def check_lead_quality(db: AsyncSession) -> DataQualityReport:
         ))
 
     # 4. Stale RAW leads (> 90 days)
-    cutoff = datetime.utcnow() - timedelta(days=90)
+    cutoff = datetime.now(tz=None) - timedelta(days=90)
     stale_q = await db.execute(
         select(Lead.id, Lead.created_at).where(
             (Lead.stage == LeadStage.RAW) & (Lead.created_at < cutoff)
         )
     )
     for lead_id, created_at in stale_q.all():
-        days_old = (datetime.utcnow() - created_at).days
+        days_old = (datetime.now(tz=None) - created_at).days
         report.add_issue(QualityIssue(
             severity="warning",
             entity_type="lead",
@@ -200,7 +200,7 @@ async def check_ticket_quality(db: AsyncSession) -> DataQualityReport:
         ))
 
     # 3. Open tickets older than 30 days with no messages
-    cutoff_30 = datetime.utcnow() - timedelta(days=30)
+    cutoff_30 = datetime.now(tz=None) - timedelta(days=30)
 
     # Sub-query: ticket IDs that have at least one message
     tickets_with_messages = (
@@ -215,7 +215,7 @@ async def check_ticket_quality(db: AsyncSession) -> DataQualityReport:
         )
     )
     for ticket_id, created_at in stale_open_q.all():
-        days_old = (datetime.utcnow() - created_at).days
+        days_old = (datetime.now(tz=None) - created_at).days
         report.add_issue(QualityIssue(
             severity="critical",
             entity_type="ticket",

@@ -125,7 +125,7 @@ class HealthScoreCalculator:
             grade=grade,
             checks=checks,
             recommendations=recs,
-            last_checked=datetime.utcnow(),
+            last_checked=datetime.now(tz=None),
         )
 
     # === Recommendations ===
