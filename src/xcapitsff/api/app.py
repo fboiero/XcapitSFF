@@ -72,7 +72,12 @@ from .webhook_delivery_api import router as webhook_delivery_router
 from .realtime_analytics_api import router as realtime_analytics_router
 from .workflow_api import router as workflow_router
 from .rate_limit_api import router as rate_limit_router
+from .rbac_api import router as rbac_router
 from .api_keys_api import router as api_keys_router
+from .notification_center_api import router as notification_center_router
+from .activity_log_api import router as activity_log_router
+from .files_api import router as files_router
+from .bulk_api_v2 import router as bulk_v2_router
 
 logger = get_logger(__name__)
 
@@ -175,9 +180,14 @@ app.include_router(gamification_router, prefix="/api/v1")
 app.include_router(ux_router, prefix="/api/v1")
 app.include_router(realtime_analytics_router, prefix="/api/v1")
 app.include_router(rate_limit_router, prefix="/api/v1")
+app.include_router(rbac_router, prefix="/api/v1")
 app.include_router(api_keys_router, prefix="/api/v1")
 app.include_router(verification_router, prefix="/api/v1")
 app.include_router(webhook_delivery_router, prefix="/api/v1")
+app.include_router(notification_center_router, prefix="/api/v1")
+app.include_router(activity_log_router, prefix="/api/v1")
+app.include_router(files_router, prefix="/api/v1")
+app.include_router(bulk_v2_router, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1")
 
 # --- Web Dashboard (served at root, no /api/v1 prefix) ---

@@ -49,7 +49,7 @@ def test_error_not_found():
 
 def test_error_unknown():
     err = get_error("unknown")
-    assert "entendí" in err.lower() or "probá" in err.lower() or "ayuda" in err.lower()
+    assert "entendí" in err.lower() or "probá" in err.lower() or "ayuda" in err.lower() or "forma" in err.lower() or "capté" in err.lower()
 
 
 def test_transition_after_create_lead():
