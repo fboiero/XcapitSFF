@@ -63,8 +63,10 @@ from .inbox_api import router as inbox_router
 from .webhooks import router as webhooks_router
 from .playground_api import router as playground_router
 from .wizard_api import router as wizard_router
+from .ux_api import router as ux_router
 from .web import router as web_router
 from .assistant_api import router as assistant_router
+from .gamification_api import router as gamification_router
 from .workflow_api import router as workflow_router
 
 logger = get_logger(__name__)
@@ -164,6 +166,8 @@ app.include_router(custom_fields_router, prefix="/api/v1")
 app.include_router(tags_router, prefix="/api/v1")
 app.include_router(inbox_router, prefix="/api/v1")
 app.include_router(assistant_router, prefix="/api/v1")
+app.include_router(gamification_router, prefix="/api/v1")
+app.include_router(ux_router, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1")
 
 # --- Web Dashboard (served at root, no /api/v1 prefix) ---
