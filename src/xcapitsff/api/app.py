@@ -81,7 +81,13 @@ from .bulk_api_v2 import router as bulk_v2_router
 from .dashboard_widgets_api import router as dashboard_widgets_router
 from .integrations_hub_api import router as integrations_hub_router
 from .report_builder_api import router as report_builder_router
+from .notes_api import router as notes_router
+from .saved_views_api import router as saved_views_router
 from .sla_policies_api import router as sla_policies_router
+from .deals_api import router as deals_router
+from .quotes_api import router as quotes_router
+from .contacts_api import router as contacts_router
+from .companies_api import router as companies_router
 
 logger = get_logger(__name__)
 
@@ -196,6 +202,12 @@ app.include_router(integrations_hub_router, prefix="/api/v1")
 app.include_router(sla_policies_router, prefix="/api/v1")
 app.include_router(dashboard_widgets_router, prefix="/api/v1")
 app.include_router(report_builder_router, prefix="/api/v1")
+app.include_router(deals_router, prefix="/api/v1")
+app.include_router(quotes_router, prefix="/api/v1")
+app.include_router(notes_router, prefix="/api/v1")
+app.include_router(saved_views_router, prefix="/api/v1")
+app.include_router(contacts_router, prefix="/api/v1")
+app.include_router(companies_router, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1")
 
 # --- Web Dashboard (served at root, no /api/v1 prefix) ---
