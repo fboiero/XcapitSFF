@@ -78,6 +78,10 @@ from .notification_center_api import router as notification_center_router
 from .activity_log_api import router as activity_log_router
 from .files_api import router as files_router
 from .bulk_api_v2 import router as bulk_v2_router
+from .dashboard_widgets_api import router as dashboard_widgets_router
+from .integrations_hub_api import router as integrations_hub_router
+from .report_builder_api import router as report_builder_router
+from .sla_policies_api import router as sla_policies_router
 
 logger = get_logger(__name__)
 
@@ -188,6 +192,10 @@ app.include_router(notification_center_router, prefix="/api/v1")
 app.include_router(activity_log_router, prefix="/api/v1")
 app.include_router(files_router, prefix="/api/v1")
 app.include_router(bulk_v2_router, prefix="/api/v1")
+app.include_router(integrations_hub_router, prefix="/api/v1")
+app.include_router(sla_policies_router, prefix="/api/v1")
+app.include_router(dashboard_widgets_router, prefix="/api/v1")
+app.include_router(report_builder_router, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1")
 
 # --- Web Dashboard (served at root, no /api/v1 prefix) ---
