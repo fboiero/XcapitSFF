@@ -88,6 +88,10 @@ from .deals_api import router as deals_router
 from .quotes_api import router as quotes_router
 from .contacts_api import router as contacts_router
 from .companies_api import router as companies_router
+from .email_templates_api import router as email_templates_router
+from .email_campaigns_api import router as email_campaigns_router
+from .tasks_api import router as tasks_router
+from .goals_api import router as goals_router
 
 logger = get_logger(__name__)
 
@@ -208,6 +212,10 @@ app.include_router(notes_router, prefix="/api/v1")
 app.include_router(saved_views_router, prefix="/api/v1")
 app.include_router(contacts_router, prefix="/api/v1")
 app.include_router(companies_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(email_templates_router, prefix="/api/v1")
+app.include_router(email_campaigns_router, prefix="/api/v1")
+app.include_router(goals_router, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1")
 
 # --- Web Dashboard (served at root, no /api/v1 prefix) ---
