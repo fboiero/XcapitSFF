@@ -43,6 +43,19 @@ class EventType(str, Enum):
     AGENT_TASK_COMPLETED = "agent.task_completed"
     AGENT_TASK_FAILED = "agent.task_failed"
 
+    # Workspace events
+    WORKSPACE_CREATED = "workspace.created"
+    WORKSPACE_PHASE_ADVANCED = "workspace.phase_advanced"
+    WORKSPACE_COMPLETED = "workspace.completed"
+
+    # Review events
+    REVIEW_REQUIRED = "review.required"
+    REVIEW_APPROVED = "review.approved"
+    REVIEW_REJECTED = "review.rejected"
+
+    # Phase events
+    PHASE_COMPLETED = "phase.completed"
+
 
 @dataclass
 class Event:

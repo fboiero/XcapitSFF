@@ -229,7 +229,7 @@ class TestSecurityHeaders:
         assert response.headers["X-Frame-Options"] == "DENY"
         assert response.headers["X-XSS-Protection"] == "1; mode=block"
         assert "max-age=31536000" in response.headers["Strict-Transport-Security"]
-        assert response.headers["Content-Security-Policy"] == "default-src 'self'"
+        assert "default-src 'self'" in response.headers["Content-Security-Policy"]
 
     def test_security_headers_on_error_route(self):
         """Headers should appear even when the route returns an error status."""

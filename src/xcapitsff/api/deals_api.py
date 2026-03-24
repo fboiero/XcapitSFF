@@ -54,6 +54,14 @@ class ConvertLeadRequest(BaseModel):
     amount: float
 
 
+class ConvertLeadSimple(BaseModel):
+    tenant_id: str
+    lead_id: str
+    name: str = ""  # Auto-generated if empty
+    amount: float = 0  # Can be 0 initially
+    stage: str = "prospecting"
+
+
 # --- Helpers ---
 
 
@@ -184,11 +192,22 @@ async def move_stage(deal_id: str, req: MoveStageRequest):
 
 
 @router.post("/convert-lead", status_code=201)
-async def convert_lead(req: ConvertLeadRequest):
+async def convert_lead(req: ConvertLeadRequest | ConvertLeadSimple):
+    # Auto-fill from lead data when fields are empty
+    name = req.name if req.name else f"Deal from lead {req.lead_id}"
+    amount = req.amount if req.amount > 0 else 0.0
+    stage_str = req.stage if hasattr(req, 'stage') else "prospecting"
+
+    try:
+        stage = DealStage(stage_str)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid stage: {stage_str}")
+
     deal = deal_manager.convert_from_lead(
         tenant_id=req.tenant_id,
         lead_id=req.lead_id,
-        name=req.name,
-        amount=req.amount,
+        name=name,
+        amount=amount,
+        stage=stage,
     )
     return _deal_to_dict(deal)

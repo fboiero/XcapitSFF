@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # --- Enums (mirror SQLAlchemy enums for API) ---
@@ -51,11 +51,26 @@ class LeadCreate(BaseModel):
     company_name: str | None = None
     contact_name: str | None = None
     contact_email: str | None = None
+    email: str | None = None  # Alias for contact_email
     region: RegionEnum = RegionEnum.LATAM
     c_level: bool = False
     score_icp: float | None = None
     afinidad: AfinidadEnum = AfinidadEnum.MEDIUM
     notes: str | None = None
+    # Optional fields that users might send
+    industry: str | None = None
+    company_size: str | None = None
+    source: str | None = None
+    phone: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def map_email_alias(cls, data):
+        """Map email field to contact_email if contact_email is not provided."""
+        if isinstance(data, dict):
+            if data.get("email") and not data.get("contact_email"):
+                data["contact_email"] = data["email"]
+        return data
 
 
 class LeadUpdate(BaseModel):

@@ -1,6 +1,7 @@
 """API endpoints for Lead management."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from xcapitsff.core.database import get_db
@@ -29,6 +30,11 @@ from xcapitsff.sales.pipeline import (
 )
 
 router = APIRouter(prefix="/leads", tags=["Sales"])
+
+
+class LeadTransitionRequest(BaseModel):
+    new_stage: LeadStageEnum
+    reason: str = ""
 
 
 @router.post("/", response_model=LeadResponse, status_code=201)
@@ -136,6 +142,46 @@ async def api_delete_lead(lead_id: int, db: AsyncSession = Depends(get_db)):
     if not deleted:
         raise HTTPException(status_code=404, detail="Lead not found")
     return None
+
+
+@router.post("/{lead_id}/transition", response_model=LeadResponse)
+async def api_transition_lead(
+    lead_id: int,
+    req: LeadTransitionRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Transition a lead to a new stage with validation."""
+    lead = await get_lead(db, lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    # Valid transitions
+    VALID_TRANSITIONS = {
+        "raw": ["contacted", "qualified", "disqualified"],
+        "contacted": ["qualified", "proposal", "disqualified"],
+        "qualified": ["proposal", "negotiation", "disqualified"],
+        "proposal": ["negotiation", "won", "lost"],
+        "negotiation": ["won", "lost"],
+        "won": [],
+        "lost": ["raw"],  # Can recycle
+        "disqualified": ["raw"],  # Can recycle
+    }
+
+    current = lead.stage.value if hasattr(lead.stage, 'value') else str(lead.stage)
+    target = req.new_stage.value if hasattr(req.new_stage, 'value') else str(req.new_stage)
+
+    valid_targets = VALID_TRANSITIONS.get(current, [])
+    if target not in valid_targets:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid transition: {current} → {target}. Valid: {valid_targets}"
+        )
+
+    data = LeadUpdate(stage=req.new_stage)
+    updated = await update_lead(db, lead_id, data)
+    if not updated:
+        raise HTTPException(status_code=500, detail="Failed to update lead")
+    return updated
 
 
 @router.post("/import", status_code=201)

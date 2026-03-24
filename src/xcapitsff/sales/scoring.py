@@ -160,8 +160,10 @@ def score_engagement(interactions: int = 0, days_since_last: int | None = None) 
     Decay factor:
         ``exp(-0.03 * days_since_last)``  (half-life ~ 23 days)
 
-    If *days_since_last* is ``None`` (unknown), a moderate default penalty of
-    0.5 is applied.
+    If interactions=0 and days_since_last is None (new lead), a moderate
+    baseline of 40.0 is applied (benefit of the doubt, not penalized for
+    lack of data). Otherwise, if *days_since_last* is ``None``, a moderate
+    default penalty of 0.5 is applied.
 
     Args:
         interactions: Total number of recorded interactions.
@@ -173,6 +175,10 @@ def score_engagement(interactions: int = 0, days_since_last: int | None = None) 
     """
     if interactions < 0:
         interactions = 0
+
+    # New lead baseline -- not penalized for lack of data
+    if interactions == 0 and days_since_last is None:
+        return 40.0
 
     # Saturating interaction score
     base = min(interactions / 10.0, 1.0) * 100.0
@@ -191,9 +197,9 @@ def score_engagement(interactions: int = 0, days_since_last: int | None = None) 
 def score_company_fit(score_icp_manual: float | None) -> float:
     """Normalise a manually-assigned ICP score to the 0-100 range.
 
-    If the manual score is ``None`` or negative, a neutral midpoint (50) is
-    returned so that the factor does not unfairly penalise leads that have not
-    yet been manually evaluated.
+    If the manual score is ``None`` or negative, a benefit-of-the-doubt
+    default of 70.0 is returned so that new leads are not unfairly penalized
+    for lacking manual evaluation data.
 
     Args:
         score_icp_manual: Raw manual score (expected 0-100) or ``None``.
@@ -202,7 +208,7 @@ def score_company_fit(score_icp_manual: float | None) -> float:
         A score clamped to 0-100.
     """
     if score_icp_manual is None:
-        return 50.0
+        return 70.0  # Changed from 50.0 — give new leads benefit of doubt
     return min(max(float(score_icp_manual), 0.0), 100.0)
 
 
@@ -212,6 +218,9 @@ def score_company_fit(score_icp_manual: float | None) -> float:
 
 # Each key maps to the weight that factor contributes toward "data
 # completeness".  If the data for a factor is present we add its weight.
+# NOTE: engagement and company_fit now provide reasonable defaults for new
+# leads (40.0 and 70.0 respectively) so they do not artificially penalize
+# leads with missing data. Confidence still reflects data completeness.
 _CONFIDENCE_COMPONENTS: dict[str, float] = {
     "region": 0.15,
     "c_level": 0.15,

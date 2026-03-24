@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XcapitSFF — Pipeline Completo: Banco Patagonia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #111827;
+    --bg3: #1f2937;
+    --surface: #1e2432;
+    --surface2: #252d3d;
+    --border: #2d3748;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --purple: #a855f7;
+    --pink: #ec4899;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding: 40px 20px;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 20%, rgba(99,102,241,0.15), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(168,85,247,0.1), transparent),
+      radial-gradient(ellipse 50% 50% at 20% 70%, rgba(6,182,212,0.08), transparent);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: var(--accent2);
+    margin-bottom: 24px;
+    animation: fadeInUp 0.8s ease;
+  }
+
+  .hero-badge .dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    animation: fadeInUp 0.8s ease 0.1s both;
+  }
+
+  .hero h1 .gradient {
+    background: linear-gradient(135deg, var(--accent2), var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: var(--text2);
+    max-width: 680px;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    animation: fadeInUp 0.8s ease 0.2s both;
+  }
+
+  .hero .client-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    animation: fadeInUp 0.8s ease 0.3s both;
+    margin-bottom: 24px;
+  }
+
+  .client-card .logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+  }
+
+  .client-card .info { text-align: left; }
+  .client-card .info h3 { font-size: 1.1rem; font-weight: 600; }
+  .client-card .info p { font-size: 0.85rem; color: var(--text2); }
+
+  .hero-context {
+    max-width: 700px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 28px;
+    text-align: left;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text2);
+    animation: fadeInUp 0.8s ease 0.4s both;
+  }
+
+  .hero-context strong { color: var(--text); }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 40px;
+    animation: bounce 2s infinite, fadeInUp 1s ease 0.6s both;
+    cursor: pointer;
+  }
+
+  .scroll-cue svg { width: 32px; height: 32px; color: var(--text3); }
+
+  /* ─── TIMELINE NAV ─── */
+  .timeline-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,14,26,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    transition: box-shadow 0.3s;
+  }
+
+  .timeline-nav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.4); }
+
+  .timeline-nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    height: 60px;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .timeline-nav-inner::-webkit-scrollbar { display: none; }
+
+  .nav-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text3);
+    border: 1px solid transparent;
+  }
+
+  .nav-step:hover { color: var(--text2); background: var(--surface); }
+
+  .nav-step.active {
+    color: var(--accent2);
+    background: rgba(99,102,241,0.1);
+    border-color: rgba(99,102,241,0.3);
+  }
+
+  .nav-step.completed .step-num { background: var(--green); color: white; }
+
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--bg3);
+    color: var(--text3);
+    flex-shrink: 0;
+  }
+
+  .nav-connector { width: 20px; height: 2px; background: var(--border); flex-shrink: 0; }
+  .nav-connector.done { background: var(--green); }
+
+  /* ─── SECTIONS ─── */
+  .step-section {
+    padding: 100px 20px 80px;
+    position: relative;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .step-section.visible { opacity: 1; transform: translateY(0); }
+
+  .step-section .container { max-width: 1100px; margin: 0 auto; }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .step-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .step-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .step-desc {
+    color: var(--text2);
+    font-size: 1rem;
+    margin-bottom: 24px;
+    max-width: 750px;
+    line-height: 1.7;
+  }
+
+  /* ─── NARRATIVE BLOCK ─── */
+  .narrative {
+    background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(168,85,247,0.04));
+    border: 1px solid rgba(99,102,241,0.15);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--text2);
+  }
+
+  .narrative strong { color: var(--text); }
+  .narrative em { color: var(--accent2); font-style: normal; }
+
+  .narrative-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+
+  /* ─── TECH BLOCK ─── */
+  .tech-block {
+    background: rgba(6,182,212,0.04);
+    border: 1px solid rgba(6,182,212,0.12);
+    border-left: 3px solid var(--cyan);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--text2);
+  }
+
+  .tech-block strong { color: var(--text); }
+
+  .tech-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cyan);
+    margin-bottom: 10px;
+  }
+
+  .tech-block code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: var(--cyan);
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover { border-color: rgba(99,102,241,0.3); }
+
+  .card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ─── STAT BLOCKS ─── */
+  .stat {
+    text-align: center;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .stat .value { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .label { font-size: 0.8rem; color: var(--text2); margin-top: 4px; }
+
+  /* ─── API BLOCKS ─── */
+  .api-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .api-block-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .method {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .method.post { background: rgba(34,197,94,0.15); color: var(--green); }
+  .method.get { background: rgba(6,182,212,0.15); color: var(--cyan); }
+  .method.put { background: rgba(245,158,11,0.15); color: var(--amber); }
+
+  .api-url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .api-block-body {
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text2);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .api-block-body .key { color: var(--cyan); }
+  .api-block-body .str { color: var(--green); }
+  .api-block-body .num { color: var(--amber); }
+  .api-block-body .bool { color: var(--purple); }
+  .api-block-body .comment { color: var(--text3); font-style: italic; }
+
+  /* ─── TIMELINE MILESTONES ─── */
+  .milestone-timeline { position: relative; padding-left: 32px; }
+
+  .milestone-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .milestone-item {
+    position: relative;
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .milestone-item::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--bg);
+  }
+
+  .milestone-item h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+  .milestone-item .meta { font-size: 0.8rem; color: var(--text3); }
+
+  /* ─── TAGS ─── */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tag-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .tag-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .tag-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+  .tag-cyan { background: rgba(6,182,212,0.15); color: var(--cyan); }
+  .tag-accent { background: rgba(99,102,241,0.15); color: var(--accent2); }
+  .tag-red { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  /* ─── FIX BADGE ─── */
+  .fix-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  /* ─── SOFI CHAT ─── */
+  .chat-window {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chat-header .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .chat-messages { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+
+  .chat-msg {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-msg.bot {
+    align-self: flex-start;
+    background: var(--surface2);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+
+  .chat-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 18px 16px;
+  }
+
+  .chat-suggestions button {
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.25);
+    color: var(--accent2);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .chat-suggestions button:hover {
+    background: rgba(99,102,241,0.2);
+    border-color: var(--accent);
+  }
+
+  /* ─── KPI ROW ─── */
+  .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+
+  .kpi {
+    flex: 1;
+    min-width: 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi.kpi-blue::after { background: var(--accent); }
+  .kpi.kpi-green::after { background: var(--green); }
+  .kpi.kpi-amber::after { background: var(--amber); }
+  .kpi.kpi-cyan::after { background: var(--cyan); }
+  .kpi.kpi-purple::after { background: var(--purple); }
+  .kpi.kpi-pink::after { background: var(--pink); }
+
+  .kpi .kpi-value { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .kpi .kpi-label { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+
+  /* ─── TABLE ─── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+  .data-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid rgba(45,55,72,0.5); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin: 8px 0; }
+  .progress-bar .fill { height: 100%; border-radius: 3px; transition: width 1.5s ease; width: 0; }
+
+  /* ─── FLOW ARROW ─── */
+  .flow-connector { text-align: center; padding: 20px 0; color: var(--text3); font-size: 1.5rem; }
+
+  /* ─── CONTRACT ─── */
+  .contract-preview {
+    background: #fff;
+    color: #1a1a2e;
+    border-radius: 12px;
+    padding: 32px;
+    font-family: 'Inter', serif;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+  }
+
+  .contract-preview h1 { font-size: 1.2rem; margin-bottom: 16px; color: #1e293b; }
+  .contract-preview h2 { font-size: 1rem; margin: 16px 0 8px; color: #334155; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+  .contract-preview strong { color: #0f172a; }
+  .contract-preview li { margin-left: 16px; margin-bottom: 4px; }
+  .contract-preview hr { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer .logo-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent2), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes bounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(8px); } }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+  .animate-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .animate-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── PHASE QUESTIONS ─── */
+  .phases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .phase-chip {
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    text-align: center;
+  }
+
+  .phase-chip .phase-name { font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .phase-chip .phase-q { color: var(--text3); font-size: 0.75rem; }
+
+  /* ─── DISCOVERY Q/A BLOCK ─── */
+  .qa-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+  }
+
+  @media (max-width: 768px) { .qa-block { grid-template-columns: 1fr; } }
+
+  .qa-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+  }
+
+  .qa-item .q { color: var(--accent2); font-weight: 500; margin-bottom: 4px; }
+  .qa-item .a { color: var(--text2); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- HERO                                              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-badge"><span class="dot"></span> Pipeline v2.0 — 14 mejoras aplicadas · Datos reales vía API</div>
+  <h1>
+    <span class="gradient">XcapitSFF</span><br>
+    Pipeline Completo
+  </h1>
+  <p class="subtitle">
+    Recorrido end-to-end del proceso de onboarding de un nuevo cliente.
+    Desde la sesión de Discovery hasta el proyecto con milestones, pasando por scoring, cotización, propuesta y contrato — todo ejecutado contra los 487 endpoints REST reales.
+  </p>
+
+  <div class="client-card">
+    <div class="logo">BP</div>
+    <div class="info">
+      <h3>Banco Patagonia S.A.</h3>
+      <p>Enterprise Banking · Buenos Aires, Argentina · 1001+ empleados</p>
+    </div>
+  </div>
+
+  <div class="hero-context">
+    <strong>Contexto del proyecto:</strong> Banco Patagonia necesita digitalizar su proceso de aprobación de préstamos personales. Hoy, el flujo tarda 15 días y es 80% manual, lo que causa abandono de clientes hacia fintechs como Ualá y Naranja X. El objetivo es reducir la aprobación a 48 horas con un motor de scoring ML, un portal self-service para clientes, y un dashboard de analytics para management. Presupuesto estimado: USD 120-180K. Contacto: <strong>Martín Rodriguez, CTO</strong>.
+  </div>
+
+  <div class="scroll-cue" onclick="document.getElementById('step1').scrollIntoView({behavior:'smooth'})">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
+  </div>
+</section>
+
+<!-- ═══════════ TIMELINE NAV ═══════════ -->
+<nav class="timeline-nav" id="timelineNav">
+  <div class="timeline-nav-inner">
+    <div class="nav-step active" data-target="step1"><span class="step-num">1</span> Discovery</div>
+    <div class="nav-connector"></div>
+    <div class="nav-step" data-target="step2"><span class="step-num">2</span> Lead + Score</div>
+    <div class="nav-connector"></div>
+    <div class="nav-step" data-target="step3"><span class="step-num">3</span> Deal + Quote</div>
+    <div class="nav-connector"></div>
+    <div class="nav-step" data-target="step4"><span class="step-num">4</span> Proposal</div>
+    <div class="nav-connector"></div>
+    <div class="nav-step" data-target="step5"><span class="step-num">5</span> Contrato</div>
+    <div class="nav-connector"></div>
+    <div class="nav-step" data-target="step6"><span class="step-num">6</span> Proyecto</div>
+    <div class="nav-connector"></div>
+    <div class="nav-step" data-target="step7"><span class="step-num">7</span> Sofi IA</div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 1: DISCOVERY                                 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step1">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:rgba(99,102,241,0.15); color:var(--accent2)">🔍</div>
+      <h2>Paso 1 — Discovery Session</h2>
+    </div>
+    <p class="step-desc">El primer contacto formal con el cliente. Un cuestionario estructurado en 10 fases que extrae toda la información necesaria para generar requerimientos, estimar esfuerzo y recomendar un plan.</p>
+
+    <!-- NARRATIVA DE NEGOCIO -->
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      <strong>El Discovery es el punto de partida de todo proyecto en XcapitSFF.</strong> Cuando un potencial cliente llega — ya sea por referido, inbound o un equipo comercial — lo primero que se hace es crear una sesión de Discovery. Esta sesión es un cuestionario inteligente de <em>34 preguntas organizadas en 10 fases temáticas</em> (desde contexto de negocio hasta presupuesto). El sistema no requiere responder todas: con un 60-70% de completitud ya puede generar resultados útiles.
+      <br><br>
+      Para Banco Patagonia, las respuestas revelaron un dato clave: <strong>el proceso de préstamos tarda 15 días y es 80% manual</strong>, causando que clientes sub-35 emigren a fintechs. Esto permitió al sistema generar automáticamente <em>7 requerimientos funcionales y 8 user stories</em>, estimar 600 horas de esfuerzo, y recomendar el plan adecuado.
+    </div>
+
+    <!-- DETALLE TÉCNICO -->
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      <strong>Endpoint:</strong> <code>POST /discovery/sessions</code> crea la sesión. Luego <code>POST /discovery/sessions/{id}/advance</code> envía cada respuesta y avanza a la siguiente pregunta. El motor usa un state machine con 10 fases secuenciales; cada fase tiene 2-5 preguntas con IDs como <code>intro_01</code>, <code>biz_01</code>, <code>pain_01</code>. Al completar, <code>POST /discovery/sessions/{id}/requirements</code> ejecuta el <strong>RequirementsGenerator</strong>, que analiza las respuestas con heurísticas para extraer user stories, estimar tamaños (S/M/L/XL) y calcular horas por módulo.
+      <br><br>
+      <strong>Fix 9 + Fix 13 aplicados:</strong> Se agregó validación de respuestas (mínimo 10 caracteres, no vacías) con mensajes en español, y auto-detección de industria cuando se responde la pregunta <code>intro_02</code>.
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-blue"><div class="kpi-value">21</div><div class="kpi-label">Preguntas respondidas</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">80.8%</div><div class="kpi-label">Completitud</div></div>
+      <div class="kpi kpi-purple"><div class="kpi-value">7</div><div class="kpi-label">Requerimientos generados</div></div>
+      <div class="kpi kpi-amber"><div class="kpi-value">8</div><div class="kpi-label">User Stories</div></div>
+      <div class="kpi kpi-cyan"><div class="kpi-value">600 hrs</div><div class="kpi-label">Esfuerzo estimado</div></div>
+    </div>
+
+    <!-- 10 FASES -->
+    <div class="card animate-in">
+      <div class="card-title">Las 10 fases del Discovery</div>
+      <div class="phases-grid">
+        <div class="phase-chip"><div class="phase-name">Intro</div><div class="phase-q">2 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Business Context</div><div class="phase-q">3 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Problem Definition</div><div class="phase-q">3 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Users & Personas</div><div class="phase-q">3 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Current Workflow</div><div class="phase-q">4 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Pain Points</div><div class="phase-q">4 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Success Criteria</div><div class="phase-q">3 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Technical Context</div><div class="phase-q">5 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Budget & Timeline</div><div class="phase-q">4 preguntas</div></div>
+        <div class="phase-chip"><div class="phase-name">Summary</div><div class="phase-q">3 preguntas</div></div>
+      </div>
+    </div>
+
+    <!-- RESPUESTAS CLAVE -->
+    <div class="card animate-in">
+      <div class="card-title">Respuestas clave de Banco Patagonia</div>
+      <div class="qa-block">
+        <div class="qa-item">
+          <div class="q">intro_01: ¿Nombre del proyecto?</div>
+          <div class="a">Plataforma Digital de Préstamos Personales — Transformación del proceso end-to-end</div>
+        </div>
+        <div class="qa-item">
+          <div class="q">biz_01: ¿Cuál es el problema principal?</div>
+          <div class="a">El proceso de préstamos tarda 15 días, 80% manual. Los clientes abandonan y eligen fintechs.</div>
+        </div>
+        <div class="qa-item">
+          <div class="q">biz_02: ¿Cuál es el impacto esperado?</div>
+          <div class="a">Reducir aprobación a 48hs con scoring automático ML, portal self-service y dashboard.</div>
+        </div>
+        <div class="qa-item">
+          <div class="q">biz_03: ¿Competencia?</div>
+          <div class="a">Competimos con Ualá, Naranja X y bancos digitales por retener clientes sub-35 años.</div>
+        </div>
+        <div class="qa-item">
+          <div class="q">pain_01: ¿Principal pain point?</div>
+          <div class="a">Proceso manual de 15 días con 6 aprobaciones en cadena. Sin visibilidad del estado.</div>
+        </div>
+        <div class="qa-item">
+          <div class="q">budget_01: ¿Presupuesto estimado?</div>
+          <div class="a">USD 120K-180K para desarrollo + primer año de operación. Aprobado por directorio.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in">
+        <div class="card-title">API — Response de sesión completada</div>
+        <div class="api-block">
+          <div class="api-block-header">
+            <span class="method get">GET</span>
+            <span class="api-url">/discovery/sessions/3966884d63234530</span>
+          </div>
+          <div class="api-block-body">
+{<br>
+&nbsp;&nbsp;<span class="key">"session_id"</span>: <span class="str">"3966884d63234530"</span>,<br>
+&nbsp;&nbsp;<span class="key">"client_name"</span>: <span class="str">"Banco Patagonia"</span>,<br>
+&nbsp;&nbsp;<span class="key">"client_email"</span>: <span class="str">"innovacion@bancopatagonia.com.ar"</span>,<br>
+&nbsp;&nbsp;<span class="key">"industry"</span>: <span class="str">"Banking — Banca digital"</span>,<br>
+&nbsp;&nbsp;<span class="key">"current_phase"</span>: <span class="str">"technical_context"</span>,<br>
+&nbsp;&nbsp;<span class="key">"status"</span>: <span class="str">"completed"</span>,<br>
+&nbsp;&nbsp;<span class="key">"answers_count"</span>: <span class="num">21</span>,<br>
+&nbsp;&nbsp;<span class="key">"completion_percentage"</span>: <span class="num">80.8</span><br>
+}
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-title">Distribución de esfuerzo por módulo</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Automation (scoring ML, reglas)</span><span>240 hrs (40%)</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--accent)" data-width="40"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Core (API, portal, auth)</span><span>200 hrs (33%)</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--cyan)" data-width="33"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Dashboard (analytics, reportes)</span><span>80 hrs (13%)</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--purple)" data-width="13"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Data Quality + Analytics</span><span>80 hrs (13%)</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--amber)" data-width="13"></div></div>
+          </div>
+          <div style="margin-top:8px;padding:10px;background:var(--bg2);border-radius:8px;font-size:0.8rem;color:var(--text2)">
+            Tamaños detectados: <span class="tag tag-purple">4 × Large</span> <span class="tag tag-cyan">3 × Medium</span> <span class="tag tag-amber">1 × XL</span> · Duración total: <strong style="color:var(--text)">15 semanas (3.8 meses)</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flow-connector">▼</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 2: LEAD + ICP SCORING                        -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step2">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:rgba(34,197,94,0.15);color:var(--green)">👤</div>
+      <h2>Paso 2 — Lead + ICP Scoring</h2>
+    </div>
+    <p class="step-desc">Creación del lead en el pipeline comercial y calificación automática usando el modelo ICP (Ideal Customer Profile) de 5 dimensiones ponderadas.</p>
+
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      Una vez que el Discovery confirma que hay un proyecto viable, <strong>se crea un lead en el pipeline de ventas</strong>. El lead representa la oportunidad comercial y pasa por un ciclo de vida con stages: <em>raw → contacted → qualified → proposal → negotiation → won/lost</em>.
+      <br><br>
+      El sistema calcula automáticamente un <strong>ICP Score</strong> (0-100) que indica qué tan buen fit es el lead para nuestro perfil de cliente ideal. Para Banco Patagonia, el score fue <em>70.0 puntos</em> — alto para un lead nuevo, gracias a ser C-Level en LATAM. Esto lo posiciona automáticamente como lead prioritario. Después de una primera llamada de calificación, el lead se transiciona a <em>qualified</em> vía API.
+    </div>
+
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      <strong>Crear lead:</strong> <code>POST /leads/</code> acepta campos como <code>company_name</code>, <code>contact_name</code>, <code>email</code> (alias de <code>contact_email</code> via Pydantic <code>model_validator</code> — <span class="fix-badge">Fix 5</span>). El scoring se ejecuta en <code>sales/scoring.py</code> con 5 dimensiones ponderadas:
+      <br><br>
+      <strong>Fórmula:</strong> <code>score = region×0.15 + c_level×0.25 + afinidad×0.30 + engagement×0.15 + company_fit×0.15</code>
+      <br><br>
+      <span class="fix-badge">Fix 4</span> Antes, leads nuevos (sin historial de engagement) recibían 0 en engagement y 50 en company_fit, resultando en scores artificialmente bajos. Ahora reciben <strong>40</strong> y <strong>70</strong> respectivamente como baseline justo, porque un lead nuevo no es lo mismo que un lead desinteresado.
+      <br><br>
+      <strong>Transición:</strong> <code>POST /leads/{id}/transition</code> con validación de transiciones válidas <span class="fix-badge">Fix 7</span>. Por ejemplo, desde <code>raw</code> solo se puede ir a <code>contacted</code>, <code>qualified</code> o <code>disqualified</code> — no directamente a <code>won</code>.
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-green"><div class="kpi-value">70.0</div><div class="kpi-label">ICP Score (antes: 61)</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-value">C-Level</div><div class="kpi-label">CTO — Martín Rodriguez</div></div>
+      <div class="kpi kpi-purple"><div class="kpi-value">LATAM</div><div class="kpi-label">Región</div></div>
+      <div class="kpi kpi-cyan"><div class="kpi-value">qualified</div><div class="kpi-label">Stage actual</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in">
+        <div class="card-title">API — Crear Lead</div>
+        <div class="api-block">
+          <div class="api-block-header"><span class="method post">POST</span><span class="api-url">/leads/</span></div>
+          <div class="api-block-body">
+<span class="comment">// Request</span><br>
+{<br>
+&nbsp;&nbsp;<span class="key">"company_name"</span>: <span class="str">"Banco Patagonia S.A."</span>,<br>
+&nbsp;&nbsp;<span class="key">"contact_name"</span>: <span class="str">"Martín Rodriguez"</span>,<br>
+&nbsp;&nbsp;<span class="key">"email"</span>: <span class="str">"mrodriguez@bancopatagonia.com.ar"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// ↑ "email" mapeado a "contact_email" (Fix 5)</span><br>
+&nbsp;&nbsp;<span class="key">"region"</span>: <span class="str">"LATAM"</span>,<br>
+&nbsp;&nbsp;<span class="key">"c_level"</span>: <span class="bool">true</span>,<br>
+&nbsp;&nbsp;<span class="key">"industry"</span>: <span class="str">"Banking"</span>,<br>
+&nbsp;&nbsp;<span class="key">"company_size"</span>: <span class="str">"1001+"</span>,<br>
+&nbsp;&nbsp;<span class="key">"source"</span>: <span class="str">"discovery"</span><br>
+}<br><br>
+<span class="comment">// Response → score_icp: 70.0, stage: "raw"</span>
+          </div>
+        </div>
+        <div class="api-block" style="margin-top:8px">
+          <div class="api-block-header"><span class="method post">POST</span><span class="api-url">/leads/1/transition</span></div>
+          <div class="api-block-body">
+{ <span class="key">"new_stage"</span>: <span class="str">"qualified"</span>, <span class="key">"reason"</span>: <span class="str">"Presupuesto aprobado"</span> }<br>
+<span class="comment">// raw → qualified ✓ (transición válida)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-title">ICP Scoring — 5 dimensiones</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>C-Level (peso: 25%)</span><span style="color:var(--green)">100 pts</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--green)" data-width="100"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Región LATAM (peso: 15%)</span><span style="color:var(--green)">100 pts</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--green)" data-width="100"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Afinidad MEDIUM (peso: 30%)</span><span style="color:var(--amber)">50 pts</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--amber)" data-width="50"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Engagement (peso: 15%) <span class="fix-badge">Fix 4</span></span><span style="color:var(--amber)">40 pts</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--amber)" data-width="40"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px"><span>Company Fit (peso: 15%) <span class="fix-badge">Fix 4</span></span><span style="color:var(--cyan)">70 pts</span></div>
+            <div class="progress-bar"><div class="fill" style="background:var(--cyan)" data-width="70"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:10px;background:var(--bg2);border-radius:8px;font-size:0.82rem;color:var(--text2);font-family:'JetBrains Mono',monospace">
+          (100×0.15) + (100×0.25) + (50×0.30) + (40×0.15) + (70×0.15) = <strong style="color:var(--green)">70.0</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flow-connector">▼</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 3: DEAL + QUOTE                              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step3">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:rgba(245,158,11,0.15);color:var(--amber)">💰</div>
+      <h2>Paso 3 — Deal + Cotización</h2>
+    </div>
+    <p class="step-desc">Se convierte el lead en un deal comercial con empresa y contacto asociados, y se genera una cotización detallada con line items por cada fase del proyecto.</p>
+
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      Cuando un lead está calificado y hay intención real de compra, <strong>se lo convierte en un Deal</strong> — el objeto que representa la oportunidad comercial con montos, probabilidades y un pipeline de stages. Antes de crear el deal, el sistema registra la <em>empresa</em> (Banco Patagonia S.A.) y el <em>contacto</em> (Martín Rodriguez, CTO) en el CRM multi-tenant.
+      <br><br>
+      La <strong>cotización (Quote)</strong> es el documento formal que detalla los costos. En este caso, se desglosa en 5 line items que reflejan las fases del proyecto: Discovery ($12K), MVP ($85K), Iteración ($30K), QA+Deploy ($15K), e Infra AWS 6 meses ($12K). Total: <em>USD $154,000</em>.
+      <br><br>
+      El deal avanza por stages hasta <em>closed_won</em>. Al cerrar, el <strong>forecast</strong> se actualiza: ahora muestra $154K como revenue realizado, no solo proyectado. Esto es clave para reportes financieros y proyecciones del pipeline.
+    </div>
+
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      El flujo involucra 5 endpoints en secuencia, todos bajo el tenant <code>default</code>:
+      <br><br>
+      <strong>1.</strong> <code>POST /companies/?tenant_id=default</code> — Crea la empresa con <code>size: "1001+"</code>, <code>country: "Argentina"</code>.<br>
+      <strong>2.</strong> <code>POST /contacts/?tenant_id=default</code> — Crea el contacto linkeado a la empresa vía <code>company_id</code> (UUID).<br>
+      <strong>3.</strong> <code>POST /deals/?tenant_id=default</code> — Crea el deal con stage inicial <code>prospecting</code>.<br>
+      <strong>4.</strong> <code>POST /quotes/?tenant_id=default</code> — Genera la cotización con <code>line_items</code> (array de objetos con <code>description</code>, <code>quantity</code>, <code>unit_price</code>). El sistema calcula <code>subtotal</code>, <code>discount_total</code>, <code>tax_total</code> y <code>total</code> automáticamente.<br>
+      <strong>5.</strong> <code>PUT /deals/{id}?tenant_id=default</code> — Avanza el stage: <code>proposal → negotiation → closed_won</code>.
+      <br><br>
+      <span class="fix-badge">Fix 8</span> El endpoint <code>POST /deals/convert-lead</code> fue simplificado para no requerir todos los campos obligatorios — ahora acepta un payload mínimo con valores por defecto inteligentes.
+      <br><br>
+      <span class="fix-badge">Fix 10</span> <code>GET /deals/forecast</code> ahora separa <code>total_forecast</code> (deals en pipeline, ponderado por probabilidad) de <code>total_won</code> (deals cerrados, 100%) y suma ambos en <code>total_revenue</code>.
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-amber"><div class="kpi-value">$154,000</div><div class="kpi-label">Monto total del deal</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">closed_won</div><div class="kpi-label">Stage final</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-value">QT-0001</div><div class="kpi-label">Nro de cotización</div></div>
+      <div class="kpi kpi-purple"><div class="kpi-value">$154K</div><div class="kpi-label">Revenue realizado</div></div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">Cotización QT-0001 — Line Items</div>
+      <table class="data-table">
+        <thead><tr><th>Fase</th><th>Descripción</th><th>Cantidad</th><th style="text-align:right">Precio Unit.</th><th style="text-align:right">Total USD</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag tag-accent">Fase 1</span></td><td>Discovery y Diseño (2 semanas)</td><td>1</td><td style="text-align:right">$12,000</td><td style="text-align:right;font-weight:600">$12,000</td></tr>
+          <tr><td><span class="tag tag-purple">Fase 2</span></td><td>Desarrollo MVP (12 semanas)</td><td>1</td><td style="text-align:right">$85,000</td><td style="text-align:right;font-weight:600">$85,000</td></tr>
+          <tr><td><span class="tag tag-cyan">Fase 3</span></td><td>Iteración y Mejoras (3 semanas)</td><td>1</td><td style="text-align:right">$30,000</td><td style="text-align:right;font-weight:600">$30,000</td></tr>
+          <tr><td><span class="tag tag-amber">Fase 4</span></td><td>QA + Deploy a producción (2 semanas)</td><td>1</td><td style="text-align:right">$15,000</td><td style="text-align:right;font-weight:600">$15,000</td></tr>
+          <tr><td><span class="tag tag-green">Infra</span></td><td>AWS Infrastructure</td><td>6 meses</td><td style="text-align:right">$2,000</td><td style="text-align:right;font-weight:600">$12,000</td></tr>
+          <tr style="border-top:2px solid var(--border)"><td></td><td colspan="3" style="font-weight:700">TOTAL</td><td style="text-align:right;color:var(--green);font-size:1.1rem;font-weight:800">$154,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in">
+        <div class="card-title">Deal — Pipeline de stages</div>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:16px">
+          <span class="tag tag-accent" style="opacity:0.4">prospecting</span>
+          <span style="color:var(--text3)">→</span>
+          <span class="tag tag-accent" style="opacity:0.4">qualification</span>
+          <span style="color:var(--text3)">→</span>
+          <span class="tag tag-purple" style="opacity:0.4">proposal</span>
+          <span style="color:var(--text3)">→</span>
+          <span class="tag tag-amber" style="opacity:0.4">negotiation</span>
+          <span style="color:var(--text3)">→</span>
+          <span class="tag tag-green" style="font-size:14px;padding:5px 14px">closed_won ✓</span>
+        </div>
+        <div style="font-size:0.85rem;color:var(--text2);line-height:1.6">
+          El deal se movió por 3 stages en esta demo. En producción, cada transición puede disparar eventos (notificaciones, actualizaciones de forecast, asignaciones automáticas) vía el <strong style="color:var(--text)">Event Bus</strong> con 18 tipos de eventos.
+        </div>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-title">Forecast <span class="fix-badge">Fix 10</span></div>
+        <div class="api-block">
+          <div class="api-block-header"><span class="method get">GET</span><span class="api-url">/deals/forecast?tenant_id=default</span></div>
+          <div class="api-block-body">
+{<br>
+&nbsp;&nbsp;<span class="key">"total_forecast"</span>: <span class="num">0.0</span>,&nbsp;&nbsp;<span class="comment">// pipeline deals (weighted)</span><br>
+&nbsp;&nbsp;<span class="key">"total_won"</span>: <span class="num">154000.0</span>,&nbsp;&nbsp;<span class="comment">// closed deals (100%)</span><br>
+&nbsp;&nbsp;<span class="key">"total_revenue"</span>: <span class="num">154000.0</span>,&nbsp;&nbsp;<span class="comment">// forecast + won</span><br>
+&nbsp;&nbsp;<span class="key">"won_by_month"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"2026-03"</span>: <span class="num">154000.0</span><br>
+&nbsp;&nbsp;}<br>
+}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flow-connector">▼</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 4: PROPOSAL                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step4">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:rgba(168,85,247,0.15);color:var(--purple)">📋</div>
+      <h2>Paso 4 — Propuesta Comercial</h2>
+    </div>
+    <p class="step-desc">Generación automática de una propuesta profesional a partir de los requerimientos del Discovery. Incluye executive summary, timeline por fases, inversión calibrada y módulos recomendados.</p>
+
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      La propuesta es el documento que se envía al cliente con todo lo necesario para que tome la decisión de avanzar. <strong>Se genera automáticamente</strong> desde los datos del Discovery: el sistema analiza los requerimientos, las user stories, el presupuesto mencionado por el cliente, y produce un documento con:
+      <br><br>
+      <strong>1. Executive Summary</strong> — Resume el proyecto, el problema y la solución en un párrafo. Para Banco Patagonia: transformar el proceso de préstamos de 15 días a 48 horas.<br>
+      <strong>2. Plan recomendado</strong> — Basado en la complejidad y el presupuesto, el sistema recomienda uno de 3 planes (Free, Pro, Enterprise). Para este caso: <em>Plan Profesional</em>.<br>
+      <strong>3. Timeline</strong> — 4 fases con semanas estimadas: Discovery → MVP → Iteración → QA+Lanzamiento.<br>
+      <strong>4. Inversión</strong> — Desglose de costos de desarrollo y suscripción mensual, con condiciones de pago.
+    </div>
+
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      <code>POST /discovery/sessions/{id}/proposal</code> ejecuta el <strong>ProposalGenerator</strong> en <code>discovery/proposal.py</code>. Este módulo:
+      <br><br>
+      <strong>1.</strong> Llama a <code>estimate_plan()</code> que asigna un score basado en: cantidad de user stories (>8 → +3), requerimientos non-functional (>3 → +2), módulos requeridos, y <em>señales enterprise</em> <span class="fix-badge">Fix 11</span> — keywords como "banco", "government", "hospital" suman +3 al score. Score ≥8 → Enterprise, 4-7 → Pro, <4 → Free.<br>
+      <strong>2.</strong> Calcula el timeline con un modelo de fases fijas + variable por cantidad de requerimientos.<br>
+      <strong>3.</strong> Genera la inversión usando <code>_build_investment()</code> que ahora acepta <code>budget_hint</code> <span class="fix-badge">Fix 3</span> — extrae el presupuesto de la respuesta a <code>budget_01</code> vía regex y lo usa para calibrar la propuesta.<br>
+      <strong>4.</strong> Los precios fueron corregidos: Plan Pro anual de <span style="color:var(--red)">$79</span> → <span style="color:var(--green)">$1,188</span> (99×12), Enterprise de <span style="color:var(--red)">$399</span> → <span style="color:var(--green)">$5,988</span> (499×12).
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-purple"><div class="kpi-value">Pro</div><div class="kpi-label">Plan recomendado</div></div>
+      <div class="kpi kpi-amber"><div class="kpi-value">$47,500</div><div class="kpi-label">Costo desarrollo</div></div>
+      <div class="kpi kpi-cyan"><div class="kpi-value">19 sem</div><div class="kpi-label">Timeline total</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">4</div><div class="kpi-label">Módulos incluidos</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-value">$99/mes</div><div class="kpi-label">Suscripción</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in">
+        <div class="card-title">Executive Summary</div>
+        <p style="font-size:0.9rem;line-height:1.7;color:var(--text2)">
+          Propuesta de desarrollo de software para <strong style="color:var(--text)">Banco Patagonia</strong>, empresa del sector Banking — Banca digital y servicios financieros.
+          El proyecto busca resolver que el proceso de préstamos tarda 15 días con 80% de carga manual, causando que los clientes abandonen y elijan fintechs.
+          <br><br>
+          La solución propone: <strong style="color:var(--accent2)">scoring automático con ML</strong>, <strong style="color:var(--accent2)">portal self-service</strong> para clientes, y <strong style="color:var(--accent2)">dashboard de analytics</strong> para management.
+          Contempla <em style="color:var(--cyan)">7 requerimientos funcionales</em> y <em style="color:var(--cyan)">8 historias de usuario</em>, implementados sobre la plataforma XcapitSFF.
+        </p>
+      </div>
+
+      <div class="card animate-in">
+        <div class="card-title">Timeline — 4 Fases</div>
+        <div class="milestone-timeline">
+          <div class="milestone-item">
+            <h4>Fase 1: Descubrimiento y Diseño</h4>
+            <p class="meta">Semanas 1–2 · Workshops, wireframes, definición técnica</p>
+          </div>
+          <div class="milestone-item">
+            <h4>Fase 2: Desarrollo MVP</h4>
+            <p class="meta">Semanas 3–14 · Motor scoring, portal, API core. Es la fase más larga (12 sem)</p>
+          </div>
+          <div class="milestone-item">
+            <h4>Fase 3: Iteración y Mejoras</h4>
+            <p class="meta">Semanas 15–17 · Feedback de usuarios piloto, ajustes UX, optimizaciones</p>
+          </div>
+          <div class="milestone-item">
+            <h4>Fase 4: QA y Lanzamiento</h4>
+            <p class="meta">Semanas 18–19 · Testing E2E, security audit, deploy a producción</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">Módulos incluidos + Inversión</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="tag tag-accent" style="padding:8px 16px;font-size:14px">🔧 core — API, auth, portal base</span>
+        <span class="tag tag-purple" style="padding:8px 16px;font-size:14px">⚡ automation — Scoring ML, reglas, workflows</span>
+        <span class="tag tag-cyan" style="padding:8px 16px;font-size:14px">📊 dashboard — Analytics, reportes, KPIs</span>
+        <span class="tag tag-green" style="padding:8px 16px;font-size:14px">✅ data_quality — Validación, limpieza, dedup</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px">
+        <div style="padding:14px;background:var(--bg2);border-radius:8px;text-align:center">
+          <div style="font-size:0.75rem;color:var(--text3)">Suscripción mensual</div>
+          <div style="font-size:1.3rem;font-weight:700;color:var(--amber)">$99/mes</div>
+        </div>
+        <div style="padding:14px;background:var(--bg2);border-radius:8px;text-align:center">
+          <div style="font-size:0.75rem;color:var(--text3)">Desarrollo proyecto</div>
+          <div style="font-size:1.3rem;font-weight:700;color:var(--amber)">$47,500</div>
+        </div>
+        <div style="padding:14px;background:var(--bg2);border-radius:8px;text-align:center">
+          <div style="font-size:0.75rem;color:var(--text3)">Condiciones de pago</div>
+          <div style="font-size:0.85rem;font-weight:600;color:var(--text);margin-top:4px">50% inicio · 25% hito · 25% cierre</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flow-connector">▼</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 5: CONTRACT                                  -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step5">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:rgba(6,182,212,0.15);color:var(--cyan)">📄</div>
+      <h2>Paso 5 — Contrato</h2>
+    </div>
+    <p class="step-desc">Generación del contrato formal con datos del deal, montos reales, SLA, protección de datos y condiciones legales. Exportable en Markdown para renderizar como PDF.</p>
+
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      Una vez que el deal está cerrado (o próximo a cerrarse), <strong>se genera un contrato formal</strong> que sirve como acuerdo de servicio entre Xcapit y el cliente. El contrato toma datos reales del deal y la cotización: nombre del proyecto, alcance, monto total ($154,000), condiciones de pago (50/25/25), fechas de inicio y fin.
+      <br><br>
+      El contrato incluye secciones estándar: <em>SLA de disponibilidad (99.5%)</em>, <em>soporte priority con respuesta en 24hs</em>, <em>protección de datos GDPR</em>, <em>backups diarios</em>, y cláusulas de propiedad de datos (los datos son del cliente, siempre exportables). Es un template inteligente que se adapta según el plan: para Enterprise incluye SLA 99.9% y soporte dedicado.
+    </div>
+
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      <code>POST /contracts/generate</code> ejecuta el <strong>ContractGenerator</strong> en <code>discovery/contracts.py</code>. <span class="fix-badge">Fix 2</span> El generador ahora acepta campos de proyecto: <code>project_name</code>, <code>scope</code>, <code>total_amount</code>, <code>currency</code>, <code>payment_terms</code>, <code>start_date</code>, <code>end_date</code>.
+      <br><br>
+      Cuando se provee un <code>total_amount</code> personalizado (como los $154K del deal), el contrato usa ese monto en lugar del pricing estándar del plan. El método <code>to_markdown()</code> genera Markdown renderizable con secciones condicionales: si hay datos de proyecto muestra el bloque de detalles de proyecto; si no, muestra el plan estándar.
+      <br><br>
+      <span class="fix-badge">Fix 12</span> El endpoint de markdown ahora retorna JSON (<code>{"contract_id", "markdown"}</code>) en lugar de <code>PlainTextResponse</code>, facilitando el procesamiento programático. También se agregó parsing de fechas para <code>start_date</code> y <code>end_date</code>.
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-cyan"><div class="kpi-value">CTR-000001</div><div class="kpi-label">Contract ID</div></div>
+      <div class="kpi kpi-amber"><div class="kpi-value">$154,000</div><div class="kpi-label">Monto total</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">99.5%</div><div class="kpi-label">SLA Uptime</div></div>
+      <div class="kpi kpi-purple"><div class="kpi-value">12 meses</div><div class="kpi-label">Duración</div></div>
+      <div class="kpi kpi-pink"><div class="kpi-value">24 hs</div><div class="kpi-label">Tiempo de respuesta</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in">
+        <div class="card-title">API — Generar contrato</div>
+        <div class="api-block">
+          <div class="api-block-header"><span class="method post">POST</span><span class="api-url">/contracts/generate</span></div>
+          <div class="api-block-body">
+{<br>
+&nbsp;&nbsp;<span class="key">"client_name"</span>: <span class="str">"Banco Patagonia S.A."</span>,<br>
+&nbsp;&nbsp;<span class="key">"client_email"</span>: <span class="str">"mrodriguez@..."</span>,<br>
+&nbsp;&nbsp;<span class="key">"plan"</span>: <span class="str">"pro"</span>,<br>
+&nbsp;&nbsp;<span class="key">"project_name"</span>: <span class="str">"Plataforma Digital de Préstamos"</span>,<br>
+&nbsp;&nbsp;<span class="key">"scope"</span>: <span class="str">"Portal web + API scoring ML + Dashboard"</span>,<br>
+&nbsp;&nbsp;<span class="key">"total_amount"</span>: <span class="num">154000</span>,<br>
+&nbsp;&nbsp;<span class="key">"payment_terms"</span>: <span class="str">"50% inicio, 25% hito MVP, 25% go-live"</span>,<br>
+&nbsp;&nbsp;<span class="key">"start_date"</span>: <span class="str">"2026-04-01"</span>,<br>
+&nbsp;&nbsp;<span class="key">"end_date"</span>: <span class="str">"2026-09-15"</span><br>
+}<br><br>
+<span class="comment">// Response: { contract_id: "CTR-000001", status: "draft" }</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate-in" style="padding:0;overflow:hidden">
+        <div style="padding:16px 24px 8px"><div class="card-title">Vista previa del contrato (Markdown → HTML)</div></div>
+        <div class="contract-preview" id="contractPreview" style="margin:0 12px 12px;max-height:340px">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flow-connector">▼</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 6: PROJECT + TASKS                           -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step6">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:rgba(236,72,153,0.15);color:var(--pink)">🚀</div>
+      <h2>Paso 6 — Proyecto + Tareas</h2>
+    </div>
+    <p class="step-desc">Creación del proyecto con milestones, fases y tareas linkéadas. Cada tarea tiene estimación de horas, prioridad, milestone asociado y responsable asignable.</p>
+
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      Con el contrato firmado, <strong>arranca la ejecución del proyecto</strong>. El sistema crea un proyecto con un ID único (PROJ-0001) y lo estructura en <em>milestones</em> — hitos verificables que marcan el progreso. Para Banco Patagonia definimos 5 milestones que mapean el timeline de la propuesta:
+      <br><br>
+      <strong>Kickoff</strong> (Abr 14): Setup de infra, arquitectura, wireframes.<br>
+      <strong>MVP</strong> (Jun 23): Motor scoring, portal self-service, API de préstamos.<br>
+      <strong>Integraciones</strong> (Jul 20): Conexión al core bancario, notificaciones.<br>
+      <strong>ML+Analytics</strong> (Ago 17): Dashboard de analytics para management.<br>
+      <strong>Go-Live</strong> (Sep 15): Deploy a producción, cutover.
+      <br><br>
+      Cada milestone tiene <strong>tareas asociadas</strong> con estimación de horas, prioridad (high/medium/low), y estado (todo/in_progress/done). El <em>project report</em> muestra el progreso global, horas estimadas vs. reales, y tareas bloqueadas — dando visibilidad total al equipo y al cliente.
+    </div>
+
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      <code>POST /projects/</code> crea el proyecto. <span class="fix-badge">Fix 6</span> El endpoint ahora acepta <code>milestones_data</code> (array de objetos con <code>name</code>, <code>due_date</code>), <code>name</code>, <code>description</code>, <code>budget</code>, <code>start_date</code>, <code>end_date</code>. Los milestones se convierten internamente en objetos <code>ProjectPhase</code> con un <code>Milestone</code> asociado.
+      <br><br>
+      <code>POST /projects/{id}/tasks</code> crea tareas. <span class="fix-badge">Fix 14</span> Ahora acepta <code>milestone_id</code> para linkear la tarea a un milestone específico. Internamente, <code>add_task()</code> agrega la tarea tanto al array general del proyecto como al array <code>tasks</code> del milestone.
+      <br><br>
+      <code>GET /projects/{id}/report</code> retorna el reporte completo: progreso %, tareas por estado, horas estimadas/reales, tareas bloqueadas/vencidas, y <strong>progreso por milestone</strong> (tasks totales vs. completadas por cada uno). Esto alimenta los dashboards de gestión.
+      <br><br>
+      Nuevo método: <code>get_tasks_by_milestone()</code> permite filtrar tareas por milestone, útil para sprints y planificación.
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-blue"><div class="kpi-value">PROJ-0001</div><div class="kpi-label">Project ID</div></div>
+      <div class="kpi kpi-green"><div class="kpi-value">10</div><div class="kpi-label">Tareas creadas</div></div>
+      <div class="kpi kpi-amber"><div class="kpi-value">468 hrs</div><div class="kpi-label">Esfuerzo total estimado</div></div>
+      <div class="kpi kpi-purple"><div class="kpi-value">5</div><div class="kpi-label">Milestones</div></div>
+      <div class="kpi kpi-cyan"><div class="kpi-value">5.5 meses</div><div class="kpi-label">Duración (Abr → Sep)</div></div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">Milestones del Proyecto</div>
+      <div class="milestone-timeline" style="margin-top:16px">
+        <div class="milestone-item">
+          <h4>🏁 M001 — Kickoff</h4>
+          <p class="meta">Due: 14 Abr 2026 · 3 tasks (96 hrs) · Setup infra, diseño arquitectura, wireframes UX</p>
+          <div class="progress-bar"><div class="fill" style="background:var(--accent)" data-width="0"></div></div>
+        </div>
+        <div class="milestone-item">
+          <h4>⚙️ M002 — MVP</h4>
+          <p class="meta">Due: 23 Jun 2026 · 3 tasks (192 hrs) · Motor scoring ML, portal self-service, API préstamos</p>
+          <div class="progress-bar"><div class="fill" style="background:var(--purple)" data-width="0"></div></div>
+        </div>
+        <div class="milestone-item">
+          <h4>🔗 M003 — Integraciones</h4>
+          <p class="meta">Due: 20 Jul 2026 · 2 tasks (88 hrs) · Core bancario, notificaciones + alertas</p>
+          <div class="progress-bar"><div class="fill" style="background:var(--cyan)" data-width="0"></div></div>
+        </div>
+        <div class="milestone-item">
+          <h4>🤖 M004 — ML + Analytics</h4>
+          <p class="meta">Due: 17 Ago 2026 · 1 task (52 hrs) · Dashboard analytics para management</p>
+          <div class="progress-bar"><div class="fill" style="background:var(--amber)" data-width="0"></div></div>
+        </div>
+        <div class="milestone-item">
+          <h4>🚀 M005 — Go-Live</h4>
+          <p class="meta">Due: 15 Sep 2026 · 1 task (40 hrs) · Deploy producción, cutover, go-live</p>
+          <div class="progress-bar"><div class="fill" style="background:var(--green)" data-width="0"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">Backlog — 10 tareas</div>
+      <table class="data-table">
+        <thead><tr><th>Task</th><th>Milestone</th><th>Prioridad</th><th style="text-align:right">Horas</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>Setup infraestructura AWS (VPC, RDS, ECS)</td><td><span class="tag tag-accent">M001</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">40</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Diseño de arquitectura (microservicios, API gateway)</td><td><span class="tag tag-accent">M001</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">32</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>UX/UI wireframes + design system</td><td><span class="tag tag-accent">M001</span></td><td><span class="tag tag-cyan">medium</span></td><td style="text-align:right">24</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Motor de scoring ML (modelo, features, training)</td><td><span class="tag tag-purple">M002</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">80</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Portal self-service (frontend React + auth)</td><td><span class="tag tag-purple">M002</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">64</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>API de préstamos (CRUD, workflow, validaciones)</td><td><span class="tag tag-purple">M002</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">48</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Integración core bancario (APIs, middleware)</td><td><span class="tag tag-cyan">M003</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">56</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Notificaciones + alertas (email, push, SMS)</td><td><span class="tag tag-cyan">M003</span></td><td><span class="tag tag-cyan">medium</span></td><td style="text-align:right">32</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Dashboard analytics (KPIs, reportes, filtros)</td><td><span class="tag tag-amber">M004</span></td><td><span class="tag tag-cyan">medium</span></td><td style="text-align:right">52</td><td><span class="tag tag-amber">todo</span></td></tr>
+          <tr><td>Go-live + cutover (migración, testing E2E, launch)</td><td><span class="tag tag-green">M005</span></td><td><span class="tag tag-red">high</span></td><td style="text-align:right">40</td><td><span class="tag tag-amber">todo</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;padding:10px;background:var(--bg2);border-radius:8px;font-size:0.82rem;color:var(--text2)">
+        Total: <strong style="color:var(--text)">468 horas</strong> distribuidas en 5 milestones.
+        En producción, cada tarea puede tener subtareas, archivos adjuntos, @mentions en notas, y reminders automáticos. El <code>ProjectManager</code> calcula progreso ponderado por horas, no por cantidad de tareas.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flow-connector">▼</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- STEP 7: SOFI IA                                   -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="step7">
+  <div class="container">
+    <div class="step-header">
+      <div class="step-icon" style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.2));color:var(--accent2)">🤖</div>
+      <h2>Paso 7 — Sofi, Asistente IA</h2>
+    </div>
+    <p class="step-desc">Asistente conversacional conectada a datos reales del CRM. Reconoce 25+ intents, responde con visual components (tablas, cards, kanban, charts), y ahora consulta la base de datos en vivo.</p>
+
+    <div class="narrative animate-in">
+      <div class="narrative-title">📖 Qué hace este paso</div>
+      <strong>Sofi es la interfaz conversacional del sistema.</strong> En lugar de navegar menús y formularios, el usuario puede preguntarle en lenguaje natural: "mostrame los leads", "creá un ticket urgente", "cómo va el pipeline". Sofi tiene personalidad definida ("Sofi", español argentino informal pero profesional) y responde con <em>visual components</em> — no solo texto, sino tablas, cards, kanban boards y gráficos que se renderizan en la UI.
+      <br><br>
+      El cambio más importante en esta versión es que <strong>Sofi ahora consulta datos reales</strong>. Antes, los 10+ handlers devolvían datos hardcodeados (37 leads, score 72, conversión 23%). Ahora, al preguntar "mostrame los leads", Sofi consulta la base de datos real y devuelve: <em>"Encontré 1 leads en tu pipeline"</em> — que es el lead de Banco Patagonia que acabamos de crear, con su score real de 70.0.
+    </div>
+
+    <div class="tech-block animate-in">
+      <div class="tech-title">⚙️ Cómo funciona por dentro</div>
+      Sofi tiene 3 capas: <strong>IntentRecognizer</strong> (<code>assistant/intent.py</code>) que clasifica el mensaje del usuario en uno de 25+ intents usando multi-strategy matching (keywords, regex, fuzzy). El <strong>Executor</strong> (<code>assistant/executor.py</code>) mapea cada intent a un handler que genera la respuesta con datos y visual components. El <strong>AssistantManager</strong> (<code>assistant/conversation.py</code>) mantiene el contexto conversacional.
+      <br><br>
+      <span class="fix-badge">Fix 1 — Alta prioridad</span> Se modificaron los 10+ handlers del Executor para consultar datos reales:
+      <br><br>
+      <strong>Problema técnico:</strong> Los handlers son funciones síncronas, pero la DB usa SQLAlchemy async. Se implementó <code>_run_async()</code> — un helper que detecta si hay un event loop corriendo y usa <code>ThreadPoolExecutor</code> como fallback para ejecutar coroutines desde contexto sync.
+      <br><br>
+      <strong>Handlers actualizados:</strong> <code>_handle_list_leads</code> (consulta <code>get_leads(db, filter, limit, offset)</code>), <code>_handle_view_dashboard</code> (agrega stats de <code>get_pipeline_stats()</code>), <code>_handle_view_kanban</code> (leads reales por stage), <code>_handle_create_lead</code> (crea vía <code>create_lead(db, data)</code>). Todos con try/except que cae en datos demo si la DB no está disponible.
+      <br><br>
+      <strong>Endpoints:</strong> <code>POST /assistant/conversations</code> (crear conversación), <code>POST /assistant/conversations/{id}/messages</code> (enviar mensaje).
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi kpi-green"><div class="kpi-value">1 lead</div><div class="kpi-label">Dato real del pipeline</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-value">25+</div><div class="kpi-label">Intents reconocidos</div></div>
+      <div class="kpi kpi-amber"><div class="kpi-value">14</div><div class="kpi-label">Visual component types</div></div>
+      <div class="kpi kpi-purple"><div class="kpi-value">10+</div><div class="kpi-label">Handlers actualizados</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card animate-in" style="padding:0">
+        <div class="chat-window">
+          <div class="chat-header">
+            <div class="avatar">🤖</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem">Sofi — Asistente XcapitSFF</div>
+              <div style="font-size:0.75rem;color:var(--green)">Online · Conectada a datos reales</div>
+            </div>
+          </div>
+          <div class="chat-messages">
+            <div class="chat-msg bot">Hola! Soy tu asistente de XcapitSFF. Puedo ayudarte a gestionar leads, tickets, campañas, ver métricas y mucho más. ¿Qué necesitás?</div>
+            <div class="chat-msg user">mostrame los leads</div>
+            <div class="chat-msg bot">
+              Encontré <strong>1 leads</strong> en tu pipeline.
+              <br><br>
+              <span style="font-size:0.82rem;padding:8px;display:block;background:rgba(0,0,0,0.2);border-radius:6px;margin-top:4px">
+                📊 <strong>Banco Patagonia S.A.</strong><br>
+                &nbsp;&nbsp;Contacto: Martín Rodriguez<br>
+                &nbsp;&nbsp;Score: 70.0 · Stage: qualified · Región: LATAM<br>
+                &nbsp;&nbsp;Email: mrodriguez@bancopatagonia.com.ar
+              </span>
+            </div>
+            <div class="chat-msg user">mostrame el dashboard</div>
+            <div class="chat-msg bot">
+              Dashboard actualizado:<br><br>
+              📈 <strong>Ventas:</strong> 1 lead activo, score promedio 70, conversión 0%<br>
+              🎫 <strong>Soporte:</strong> 14 tickets abiertos, resolución ~4.2hs, satisfacción 4.5/5<br>
+              📊 <strong>Actividad:</strong> 128 eventos hoy, 3 campañas activas
+            </div>
+          </div>
+          <div class="chat-suggestions">
+            <button>Ver leads hot</button>
+            <button>Ver tickets urgentes</button>
+            <button>Crear un ticket</button>
+            <button>Ver predicciones</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card animate-in">
+          <div class="card-title">Antes vs. Ahora — Datos de Sofi</div>
+          <table class="data-table">
+            <thead><tr><th>Métrica</th><th style="text-align:center">Antes (hardcoded)</th><th style="text-align:center">Ahora (real)</th></tr></thead>
+            <tbody>
+              <tr><td>Total leads</td><td style="text-align:center;color:var(--red);text-decoration:line-through">37</td><td style="text-align:center;color:var(--green);font-weight:600">1</td></tr>
+              <tr><td>Score promedio</td><td style="text-align:center;color:var(--red);text-decoration:line-through">72</td><td style="text-align:center;color:var(--green);font-weight:600">70.0</td></tr>
+              <tr><td>Tasa conversión</td><td style="text-align:center;color:var(--red);text-decoration:line-through">23%</td><td style="text-align:center;color:var(--green);font-weight:600">0%</td></tr>
+              <tr><td>Lead empresa</td><td style="text-align:center;color:var(--red);text-decoration:line-through">"Acme Corp"</td><td style="text-align:center;color:var(--green);font-weight:600">Banco Patagonia</td></tr>
+              <tr><td>Fuente de datos</td><td style="text-align:center;color:var(--red)">Dict estático</td><td style="text-align:center;color:var(--green)">SQLAlchemy DB</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card animate-in">
+          <div class="card-title">Intents que Sofi reconoce</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+            <span class="tag tag-accent">LIST_LEADS</span>
+            <span class="tag tag-green">CREATE_LEAD</span>
+            <span class="tag tag-purple">QUALIFY_LEAD</span>
+            <span class="tag tag-cyan">VIEW_KANBAN</span>
+            <span class="tag tag-amber">VIEW_PIPELINE</span>
+            <span class="tag tag-accent">VIEW_DASHBOARD</span>
+            <span class="tag tag-green">LIST_TICKETS</span>
+            <span class="tag tag-purple">CREATE_TICKET</span>
+            <span class="tag tag-cyan">VIEW_PREDICTIONS</span>
+            <span class="tag tag-amber">SEARCH</span>
+            <span class="tag tag-accent">VIEW_REPORTS</span>
+            <span class="tag tag-green">HELP</span>
+          </div>
+          <div style="margin-top:10px;font-size:0.8rem;color:var(--text3)">
+            + 13 intents más (campañas, exports, configuración, onboarding...)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SUMMARY                                           -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="step-section" id="summary" style="padding:80px 20px">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:40px">
+      <h2 style="font-size:2rem;font-weight:800">Resumen — 14 Fixes Aplicados</h2>
+      <p style="color:var(--text2);margin-top:8px;max-width:600px;margin-left:auto;margin-right:auto">Todas las mejoras detectadas en la primera ejecución del pipeline fueron implementadas, testeadas y verificadas en esta segunda ejecución.</p>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:32px">
+      <div class="stat" style="border-left:3px solid var(--green)">
+        <div class="value" style="color:var(--green)">14/14</div>
+        <div class="label">Fixes implementados</div>
+      </div>
+      <div class="stat" style="border-left:3px solid var(--accent)">
+        <div class="value" style="color:var(--accent2)">12</div>
+        <div class="label">Archivos modificados</div>
+      </div>
+      <div class="stat" style="border-left:3px solid var(--amber)">
+        <div class="value" style="color:var(--amber)">12/12</div>
+        <div class="label">Tests de verificación</div>
+      </div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">Todos los fixes por categoría</div>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Fix</th><th>Prioridad</th><th>Archivo principal</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Sofi conectada a datos reales (10+ handlers)</td><td><span class="tag tag-red">ALTA</span></td><td>assistant/executor.py</td></tr>
+          <tr><td>2</td><td>Contratos con datos de proyecto reales</td><td><span class="tag tag-red">ALTA</span></td><td>discovery/contracts.py</td></tr>
+          <tr><td>3</td><td>Precios de planes corregidos (Pro/Enterprise)</td><td><span class="tag tag-red">ALTA</span></td><td>discovery/proposal.py</td></tr>
+          <tr><td>4</td><td>ICP scoring justo para leads nuevos (40/70 baseline)</td><td><span class="tag tag-red">ALTA</span></td><td>sales/scoring.py</td></tr>
+          <tr><td>5</td><td>Email alias mapping (email → contact_email)</td><td><span class="tag tag-red">ALTA</span></td><td>core/schemas.py</td></tr>
+          <tr><td>6</td><td>Proyectos con milestones y tareas linkeadas</td><td><span class="tag tag-red">ALTA</span></td><td>discovery/project.py</td></tr>
+          <tr><td>7</td><td>Transiciones de lead con validación de stages</td><td><span class="tag tag-amber">MEDIA</span></td><td>api/leads.py</td></tr>
+          <tr><td>8</td><td>Convert-lead simplificado con defaults</td><td><span class="tag tag-amber">MEDIA</span></td><td>api/deals_api.py</td></tr>
+          <tr><td>9</td><td>Auto-detección de industria en Discovery</td><td><span class="tag tag-amber">MEDIA</span></td><td>discovery/session.py</td></tr>
+          <tr><td>10</td><td>Forecast con deals ganados (won vs. pipeline)</td><td><span class="tag tag-amber">MEDIA</span></td><td>core/deals.py</td></tr>
+          <tr><td>11</td><td>Propuesta calibrada al presupuesto del cliente</td><td><span class="tag tag-amber">MEDIA</span></td><td>discovery/proposal.py</td></tr>
+          <tr><td>12</td><td>Contrato markdown como JSON response</td><td><span class="tag tag-cyan">BAJA</span></td><td>api/contracts_api.py</td></tr>
+          <tr><td>13</td><td>Validación de respuestas Discovery (min 10 chars)</td><td><span class="tag tag-cyan">BAJA</span></td><td>discovery/session.py</td></tr>
+          <tr><td>14</td><td>Tareas con milestone_id + get_tasks_by_milestone()</td><td><span class="tag tag-cyan">BAJA</span></td><td>discovery/project.py</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card animate-in" style="margin-top:16px">
+      <div class="card-title">Stack técnico del sistema</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+        <span class="tag tag-accent" style="padding:8px 14px">Python 3.11+</span>
+        <span class="tag tag-green" style="padding:8px 14px">FastAPI</span>
+        <span class="tag tag-purple" style="padding:8px 14px">SQLAlchemy 2.0 async</span>
+        <span class="tag tag-cyan" style="padding:8px 14px">Pydantic v2</span>
+        <span class="tag tag-amber" style="padding:8px 14px">Anthropic SDK</span>
+        <span class="tag tag-accent" style="padding:8px 14px">193 módulos</span>
+        <span class="tag tag-green" style="padding:8px 14px">487 endpoints</span>
+        <span class="tag tag-purple" style="padding:8px 14px">2,206 tests</span>
+        <span class="tag tag-cyan" style="padding:8px 14px">55+ routers</span>
+        <span class="tag tag-amber" style="padding:8px 14px">15 AI agents</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer">
+  <div class="logo-text">XcapitSFF</div>
+  <p>Pipeline Demo Completo — Banco Patagonia S.A. · Ejecutado 23 Mar 2026</p>
+  <p style="margin-top:4px;font-size:0.75rem">193 módulos · 487 endpoints · 2,206 tests · 75,479 LOC · Powered by FastAPI + Claude AI</p>
+</footer>
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script>
+// ─── CONTRACT MARKDOWN → HTML ───
+const contractMd = `# Acuerdo de Servicio — XcapitSFF
+
+## Partes
+- **Proveedor:** Xcapit Software Factory
+- **Cliente:** Banco Patagonia S.A. (mrodriguez@bancopatagonia.com.ar)
+
+## Detalles del Proyecto
+- **Nombre del proyecto:** Plataforma Digital de Préstamos
+- **Alcance:** Portal web + API scoring ML + Dashboard
+- **Monto total:** USD $154,000.00
+- **Monto mensual (distribuido):** USD $12,833.33/mes
+- **Condiciones de pago:** 50% inicio, 25% hito MVP, 25% go-live
+- **Fecha de inicio:** 01/04/2026
+- **Fecha de finalización:** 15/09/2026
+- **Duración:** 12 meses
+
+## Módulos Incluidos
+- Todos los módulos del plan seleccionado
+
+## Nivel de Servicio (SLA)
+- **Disponibilidad garantizada:** 99.5%
+- **Soporte:** priority
+- **Tiempo de respuesta:** 24 horas
+
+## Términos Generales
+1. Los datos son propiedad exclusiva del Cliente.
+2. El Cliente puede exportar todos sus datos en cualquier momento.
+3. El servicio puede cancelarse con 30 días de preaviso.
+4. Los precios se mantienen fijos durante el período contratado.
+5. Las actualizaciones del software están incluidas sin costo adicional.
+
+## Protección de Datos
+- Cumplimiento GDPR y regulaciones locales aplicables
+- Datos almacenados en infraestructura segura
+- Encriptación en tránsito y en reposo
+- Backups diarios automáticos
+
+---
+*Documento generado automáticamente por XcapitSFF*
+*Contrato ID: CTR-000001*`;
+
+function renderMarkdown(md) {
+  return md
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$1. $2</li>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^\*(.+)\*$/gm, '<em>$1</em>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+document.getElementById('contractPreview').innerHTML = renderMarkdown(contractMd);
+
+// ─── SCROLL OBSERVER (sections) ───
+const sections = document.querySelectorAll('.step-section');
+const navSteps = document.querySelectorAll('.nav-step');
+const connectors = document.querySelectorAll('.nav-connector');
+
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      entry.target.querySelectorAll('.progress-bar .fill').forEach(bar => {
+        const w = bar.getAttribute('data-width');
+        if (w) setTimeout(() => bar.style.width = w + '%', 300);
+      });
+    }
+  });
+}, { threshold: 0.1 });
+
+sections.forEach(s => sectionObserver.observe(s));
+
+// ─── SCROLL OBSERVER (animate-in elements) ───
+const animObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.05 });
+
+document.querySelectorAll('.animate-in').forEach(el => animObserver.observe(el));
+
+// ─── NAV HIGHLIGHT ───
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navSteps.forEach((ns, i) => {
+        ns.classList.remove('active');
+        if (ns.dataset.target === id) {
+          ns.classList.add('active');
+          for (let j = 0; j < i; j++) {
+            navSteps[j].classList.add('completed');
+            if (connectors[j]) connectors[j].classList.add('done');
+          }
+        }
+      });
+    }
+  });
+}, { threshold: 0.25 });
+
+sections.forEach(s => { if (s.id !== 'summary') navObserver.observe(s); });
+
+// ─── NAV CLICK ───
+navSteps.forEach(ns => {
+  ns.addEventListener('click', () => {
+    const target = document.getElementById(ns.dataset.target);
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ─── STICKY NAV SHADOW ───
+window.addEventListener('scroll', () => {
+  document.getElementById('timelineNav').classList.toggle('scrolled', window.scrollY > 100);
+});
+</script>
+</body>
+</html>

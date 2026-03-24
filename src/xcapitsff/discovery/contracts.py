@@ -28,6 +28,13 @@ class Contract:
     created_at: datetime = field(default_factory=datetime.now)
     signed_at: datetime | None = None
     status: str = "draft"  # draft, sent, signed, active, cancelled
+    # Custom project contract fields
+    project_name: str = ""
+    scope: str = ""
+    total_amount: float | None = None
+    currency: str = "USD"
+    payment_terms: str = ""
+    end_date: datetime | None = None
 
 
 class ContractGenerator:
@@ -48,13 +55,27 @@ class ContractGenerator:
         plan: str,
         modules: list[str] | None = None,
         term_months: int = 12,
+        # NEW: Custom project contract fields
+        project_name: str = "",
+        scope: str = "",
+        total_amount: float | None = None,
+        currency: str = "USD",
+        payment_terms: str = "",
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> Contract:
         pricing = {
             "free": (0, 0),
-            "pro": (99, 79 * 12),
-            "enterprise": (499, 399 * 12),
+            "pro": (99, 99 * 12),
+            "enterprise": (499, 499 * 12),
         }
-        monthly, annual = pricing.get(plan, (99, 79 * 12))
+
+        # Use custom total_amount if provided, otherwise use plan pricing
+        if total_amount is not None:
+            monthly = total_amount / max(term_months, 1)
+            annual = total_amount
+        else:
+            monthly, annual = pricing.get(plan, (99, 99 * 12))
 
         sla = {"free": "99%", "pro": "99.5%", "enterprise": "99.9%"}
         support = {"free": "email", "pro": "priority", "enterprise": "dedicated_24_7"}
@@ -66,29 +87,52 @@ class ContractGenerator:
             plan=plan,
             monthly_amount=monthly,
             annual_amount=annual,
-            start_date=datetime.now(),
+            start_date=start_date or datetime.now(),
             term_months=term_months,
             modules_included=modules or [],
             sla_uptime=sla.get(plan, "99%"),
             support_level=support.get(plan, "standard"),
+            # Set custom project contract fields
+            project_name=project_name,
+            scope=scope,
+            total_amount=total_amount,
+            currency=currency,
+            payment_terms=payment_terms,
+            end_date=end_date,
         )
         self._contracts[contract.contract_id] = contract
         return contract
 
     def to_markdown(self, contract: Contract) -> str:
+        # Determine if showing project-specific or plan pricing
+        if contract.total_amount:
+            # Project-specific contract
+            pricing_section = f"""## Detalles del Proyecto
+- **Nombre del proyecto:** {contract.project_name}
+- **Alcance:** {contract.scope}
+- **Monto total:** {contract.currency} ${contract.total_amount:,.2f}
+- **Monto mensual (distribuido):** {contract.currency} ${contract.monthly_amount:,.2f}/mes
+- **Condiciones de pago:** {contract.payment_terms}
+- **Fecha de inicio:** {contract.start_date.strftime('%d/%m/%Y')}
+- **Fecha de finalización:** {contract.end_date.strftime('%d/%m/%Y') if contract.end_date else 'Por definir'}
+- **Duración:** {contract.term_months} meses"""
+        else:
+            # Standard plan-based contract
+            pricing_section = f"""## Plan Contratado
+- **Plan:** {contract.plan.capitalize()}
+- **Monto mensual:** USD ${contract.monthly_amount}/mes
+- **Monto anual:** USD ${contract.annual_amount}/año
+- **Duración:** {contract.term_months} meses
+- **Renovación automática:** {'Sí' if contract.auto_renew else 'No'}
+- **Fecha de inicio:** {contract.start_date.strftime('%d/%m/%Y')}"""
+
         return f"""# Acuerdo de Servicio — XcapitSFF
 
 ## Partes
 - **Proveedor:** Xcapit Software Factory
 - **Cliente:** {contract.client_name} ({contract.client_email})
 
-## Plan Contratado
-- **Plan:** {contract.plan.capitalize()}
-- **Monto mensual:** USD ${contract.monthly_amount}/mes
-- **Monto anual:** USD ${contract.annual_amount}/año
-- **Duración:** {contract.term_months} meses
-- **Renovación automática:** {'Sí' if contract.auto_renew else 'No'}
-- **Fecha de inicio:** {contract.start_date.strftime('%d/%m/%Y')}
+{pricing_section}
 
 ## Módulos Incluidos
 {chr(10).join(f'- {m}' for m in contract.modules_included) if contract.modules_included else '- Todos los módulos del plan seleccionado'}

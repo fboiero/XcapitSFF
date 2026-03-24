@@ -12,6 +12,13 @@ class CreateProjectRequest(BaseModel):
     client_name: str
     plan: str = "pro"
     tenant_id: str | None = None
+    discovery_session_id: str | None = None
+    milestones: list[dict] | None = None
+    name: str = ""
+    description: str = ""
+    budget: float = 0
+    start_date: str = ""
+    end_date: str = ""
 
 
 class AddTaskRequest(BaseModel):
@@ -20,6 +27,7 @@ class AddTaskRequest(BaseModel):
     assignee: str = "unassigned"
     priority: str = "medium"
     estimated_hours: float = 0
+    milestone_id: str | None = None
 
 
 class UpdateTaskStatusRequest(BaseModel):
@@ -32,6 +40,13 @@ async def create_project(req: CreateProjectRequest):
         client_name=req.client_name,
         plan=req.plan,
         tenant_id=req.tenant_id,
+        discovery_session_id=req.discovery_session_id,
+        milestones_data=req.milestones,
+        name=req.name,
+        description=req.description,
+        budget=req.budget,
+        start_date=req.start_date,
+        end_date=req.end_date,
     )
     return {"project_id": project.project_id, "client": project.client_name, "status": project.status.value}
 
@@ -79,10 +94,11 @@ async def add_task(project_id: str, req: AddTaskRequest):
         assignee=req.assignee,
         priority=req.priority,
         estimated_hours=req.estimated_hours,
+        milestone_id=req.milestone_id,
     )
     if not task:
         raise HTTPException(status_code=404, detail="Project not found")
-    return {"task_id": task.task_id, "title": task.title, "status": task.status.value}
+    return {"task_id": task.task_id, "title": task.title, "status": task.status.value, "milestone_id": task.milestone_id}
 
 
 @router.patch("/{project_id}/tasks/{task_id}")

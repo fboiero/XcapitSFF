@@ -469,12 +469,25 @@ class DiscoveryEngine:
                 f"'{session.current_phase.value}'"
             )
 
+        # Basic answer quality validation
+        answer_stripped = answer.strip()
+        if not answer_stripped:
+            raise ValueError("La respuesta no puede estar vacía")
+        if len(answer_stripped) < 10:
+            raise ValueError(
+                f"La respuesta es demasiado corta ({len(answer_stripped)} caracteres). "
+                "Por favor, proporcioná más detalle (mínimo 10 caracteres)."
+            )
+
         # Si ya fue respondida, actualizar
         for existing in session.answers:
             if existing.question_id == question_id:
                 existing.answer = answer
                 existing.notes = notes
                 existing.answered_at = datetime.now(timezone.utc)
+                # Auto-populate industry from intro_02 answer
+                if question_id == "intro_02":
+                    session.industry = answer
                 return existing
 
         discovery_answer = DiscoveryAnswer(
@@ -484,6 +497,9 @@ class DiscoveryEngine:
             notes=notes,
         )
         session.answers.append(discovery_answer)
+        # Auto-populate industry from intro_02 answer
+        if question_id == "intro_02":
+            session.industry = answer
         return discovery_answer
 
     # -- Navegación de fases --

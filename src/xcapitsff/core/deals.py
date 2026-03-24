@@ -224,20 +224,32 @@ class DealManager:
         }
 
     def get_forecast(self, tenant_id: str, months: int = 3) -> dict:
-        deals = [
+        # Active deals (pipeline forecast)
+        active_deals = [
             d for d in self._deals.values()
             if d.tenant_id == tenant_id
             and d.stage not in (DealStage.CLOSED_WON, DealStage.CLOSED_LOST)
             and d.expected_close_date
         ]
+
+        # Won deals (realized revenue)
+        won_deals = [
+            d for d in self._deals.values()
+            if d.tenant_id == tenant_id
+            and d.stage == DealStage.CLOSED_WON
+        ]
+
         now = datetime.now(tz=None)
         by_month: dict[str, float] = {}
+        won_by_month: dict[str, float] = {}
         for m in range(months):
             month_start = (now + timedelta(days=30 * m)).replace(day=1)
             month_key = month_start.strftime("%Y-%m")
             by_month[month_key] = 0.0
+            won_by_month[month_key] = 0.0
 
-        for deal in deals:
+        # Pipeline forecast (weighted by probability)
+        for deal in active_deals:
             try:
                 close_dt = datetime.fromisoformat(deal.expected_close_date)
                 month_key = close_dt.strftime("%Y-%m")
@@ -246,9 +258,25 @@ class DealManager:
             except (ValueError, TypeError):
                 continue
 
+        # Won revenue (100% realized)
+        for deal in won_deals:
+            try:
+                close_dt = datetime.fromisoformat(deal.closed_at) if deal.closed_at else datetime.now(tz=None)
+                month_key = close_dt.strftime("%Y-%m")
+                if month_key in won_by_month:
+                    won_by_month[month_key] += deal.amount
+            except (ValueError, TypeError):
+                continue
+
+        total_pipeline = sum(by_month.values())
+        total_won = sum(won_by_month.values())
+
         return {
             "by_month": {k: round(v, 2) for k, v in by_month.items()},
-            "total_forecast": round(sum(by_month.values()), 2),
+            "won_by_month": {k: round(v, 2) for k, v in won_by_month.items()},
+            "total_forecast": round(total_pipeline, 2),
+            "total_won": round(total_won, 2),
+            "total_revenue": round(total_pipeline + total_won, 2),
         }
 
     def get_won_deals(self, tenant_id: str, days: int = 30) -> list[Deal]:

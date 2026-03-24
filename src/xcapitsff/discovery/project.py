@@ -42,6 +42,7 @@ class ProjectTask:
     completed_at: datetime | None = None
     dependencies: list[str] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
+    milestone_id: str | None = None  # link to milestone
 
 
 @dataclass
@@ -119,6 +120,12 @@ class ProjectManager:
         plan: str = "pro",
         tenant_id: str | None = None,
         discovery_session_id: str | None = None,
+        milestones_data: list[dict] | None = None,
+        name: str = "",
+        description: str = "",
+        budget: float = 0,
+        start_date: str = "",
+        end_date: str = "",
     ) -> Project:
         project = Project(
             project_id=self._next_id(),
@@ -127,8 +134,40 @@ class ProjectManager:
             tenant_id=tenant_id,
             discovery_session_id=discovery_session_id,
         )
+        project.notes = description
+
+        # Process milestones into phases
+        if milestones_data:
+            for i, ms_data in enumerate(milestones_data):
+                due = ms_data.get("due_date", "")
+                if isinstance(due, str) and due:
+                    try:
+                        due_dt = datetime.fromisoformat(due)
+                    except ValueError:
+                        due_dt = datetime.now() + timedelta(weeks=(i+1)*4)
+                else:
+                    due_dt = datetime.now() + timedelta(weeks=(i+1)*4)
+
+                milestone = Milestone(
+                    milestone_id=f"{project.project_id}-M{i+1:03d}",
+                    name=ms_data.get("name", f"Milestone {i+1}"),
+                    description=ms_data.get("description", ""),
+                    due_date=due_dt,
+                )
+                # Create a phase for each milestone
+                start_dt = datetime.now() + timedelta(weeks=i*4) if i == 0 else project.phases[-1].end_date if project.phases else datetime.now()
+                phase = ProjectPhase(
+                    phase_id=f"{project.project_id}-P{i+1}",
+                    name=ms_data.get("name", f"Fase {i+1}"),
+                    description=ms_data.get("description", ""),
+                    start_date=start_dt,
+                    end_date=due_dt,
+                    milestones=[milestone],
+                )
+                project.phases.append(phase)
+
         self._projects[project.project_id] = project
-        logger.info(f"Project created: {project.project_id} for {client_name}")
+        logger.info(f"Project created: {project.project_id} for {client_name} with {len(project.phases)} phases")
         return project
 
     def create_from_proposal(self, client_name: str, plan: str, phases_data: list[dict]) -> Project:
@@ -160,6 +199,7 @@ class ProjectManager:
         assignee: str = "unassigned",
         priority: str = "medium",
         estimated_hours: float = 0,
+        milestone_id: str | None = None,
     ) -> ProjectTask | None:
         project = self._projects.get(project_id)
         if not project:
@@ -172,8 +212,18 @@ class ProjectManager:
             assignee=assignee,
             priority=priority,
             estimated_hours=estimated_hours,
+            milestone_id=milestone_id,
         )
         project.tasks.append(task)
+
+        # Link task to milestone if specified
+        if milestone_id:
+            for phase in project.phases:
+                for ms in phase.milestones:
+                    if ms.milestone_id == milestone_id:
+                        ms.tasks.append(task.task_id)
+                        break
+
         return task
 
     def update_task_status(self, project_id: str, task_id: str, status: TaskStatus) -> bool:
@@ -187,6 +237,13 @@ class ProjectManager:
                     task.completed_at = datetime.now()
                 return True
         return False
+
+    def get_tasks_by_milestone(self, project_id: str, milestone_id: str) -> list[ProjectTask]:
+        """Get all tasks linked to a specific milestone."""
+        project = self._projects.get(project_id)
+        if not project:
+            return []
+        return [t for t in project.tasks if t.milestone_id == milestone_id]
 
     def get_project(self, project_id: str) -> Project | None:
         return self._projects.get(project_id)
@@ -213,6 +270,19 @@ class ProjectManager:
             if t.due_date and t.due_date < datetime.now() and t.status != TaskStatus.DONE
         ]
 
+        milestones_data = [
+            {
+                "milestone_id": ms.milestone_id,
+                "name": ms.name,
+                "due_date": ms.due_date.isoformat(),
+                "completed": ms.completed,
+                "task_count": len(ms.tasks),
+                "tasks_done": len([t for t in project.tasks if t.task_id in ms.tasks and t.status == TaskStatus.DONE]),
+            }
+            for phase in project.phases
+            for ms in phase.milestones
+        ]
+
         return {
             "project_id": project.project_id,
             "client": project.client_name,
@@ -225,6 +295,7 @@ class ProjectManager:
             "blocked_tasks": len(blocked),
             "overdue_tasks": len(overdue),
             "phases": len(project.phases),
+            "milestones": milestones_data,
         }
 
     def get_stats(self) -> dict:

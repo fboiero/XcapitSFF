@@ -1,7 +1,7 @@
 """API endpoints for Contract management."""
 
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from xcapitsff.discovery.contracts import contract_generator
@@ -15,16 +15,46 @@ class GenerateContractRequest(BaseModel):
     plan: str = "pro"
     modules: list[str] = []
     term_months: int = 12
+    # Custom project contract fields
+    project_name: str = ""
+    scope: str = ""
+    total_amount: float | None = None
+    currency: str = "USD"
+    payment_terms: str = ""
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 @router.post("/", status_code=201)
 async def generate_contract(req: GenerateContractRequest):
+    # Parse dates if provided
+    start_date = None
+    if req.start_date:
+        try:
+            start_date = datetime.fromisoformat(req.start_date)
+        except (ValueError, TypeError):
+            pass
+
+    end_date = None
+    if req.end_date:
+        try:
+            end_date = datetime.fromisoformat(req.end_date)
+        except (ValueError, TypeError):
+            pass
+
     contract = contract_generator.generate(
         client_name=req.client_name,
         client_email=req.client_email,
         plan=req.plan,
         modules=req.modules,
         term_months=req.term_months,
+        project_name=req.project_name,
+        scope=req.scope,
+        total_amount=req.total_amount,
+        currency=req.currency,
+        payment_terms=req.payment_terms,
+        start_date=start_date,
+        end_date=end_date,
     )
     return {
         "contract_id": contract.contract_id,
@@ -32,6 +62,8 @@ async def generate_contract(req: GenerateContractRequest):
         "plan": contract.plan,
         "monthly": contract.monthly_amount,
         "annual": contract.annual_amount,
+        "project_name": contract.project_name,
+        "total_amount": contract.total_amount,
         "status": contract.status,
     }
 
@@ -60,7 +92,7 @@ async def get_contract_markdown(contract_id: str):
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
     md = contract_generator.to_markdown(contract)
-    return PlainTextResponse(md, media_type="text/markdown")
+    return {"contract_id": contract_id, "markdown": md}
 
 
 @router.post("/{contract_id}/sign")

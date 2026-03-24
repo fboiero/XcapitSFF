@@ -92,6 +92,12 @@ from .email_templates_api import router as email_templates_router
 from .email_campaigns_api import router as email_campaigns_router
 from .tasks_api import router as tasks_router
 from .goals_api import router as goals_router
+from .agent_registry_api import router as agent_registry_router
+from .workspace_api import router as workspace_router
+from .task_pipeline_api import router as task_pipeline_router
+from .execution_api import router as execution_router
+from .artifact_api import router as artifact_router
+from .review_gate_api import router as review_gate_router
 
 logger = get_logger(__name__)
 
@@ -112,6 +118,15 @@ async def lifespan(app: FastAPI):
     from xcapitsff.core.activity import activity_feed, setup_activity_feed
     setup_activity_feed(event_bus, activity_feed)
     logger.info("Activity feed active")
+    from xcapitsff.agents.agent_registry import agent_registry
+    from xcapitsff.core.artifact_store import artifact_store
+    from xcapitsff.core.task_pipeline import task_pipeline
+    from xcapitsff.core.review_gate import review_gate_manager
+    from xcapitsff.agents.dispatcher import AgentDispatcher
+    from xcapitsff.agents.execution_engine import init_execution_engine
+    dispatcher = AgentDispatcher()
+    init_execution_engine(agent_registry, task_pipeline, dispatcher, artifact_store, review_gate_manager)
+    logger.info("Execution engine initialized")
     yield
     logger.info("Shutting down XcapitSFF")
 
@@ -216,7 +231,17 @@ app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(email_templates_router, prefix="/api/v1")
 app.include_router(email_campaigns_router, prefix="/api/v1")
 app.include_router(goals_router, prefix="/api/v1")
+app.include_router(agent_registry_router, prefix="/api/v1")
+app.include_router(workspace_router, prefix="/api/v1")
+app.include_router(task_pipeline_router, prefix="/api/v1")
+app.include_router(execution_router, prefix="/api/v1")
+app.include_router(artifact_router, prefix="/api/v1")
+app.include_router(review_gate_router, prefix="/api/v1")
 app.include_router(system_router, prefix="/api/v1")
+
+# --- Seed (demo only) ---
+from xcapitsff.api.seed_api import router as seed_router
+app.include_router(seed_router, prefix="/api/v1")
 
 # --- Web Dashboard (served at root, no /api/v1 prefix) ---
 app.include_router(web_router)

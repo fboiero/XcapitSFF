@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 # Valid stage transitions
 STAGE_TRANSITIONS: dict[LeadStage, list[LeadStage]] = {
-    LeadStage.RAW: [LeadStage.QUALIFIED, LeadStage.LOST],
-    LeadStage.QUALIFIED: [LeadStage.CONTACTED, LeadStage.LOST],
-    LeadStage.CONTACTED: [LeadStage.MEETING, LeadStage.LOST],
+    LeadStage.RAW: [LeadStage.CONTACTED, LeadStage.QUALIFIED, LeadStage.LOST],
+    LeadStage.CONTACTED: [LeadStage.QUALIFIED, LeadStage.PROPOSAL, LeadStage.LOST],
+    LeadStage.QUALIFIED: [LeadStage.PROPOSAL, LeadStage.NEGOTIATION, LeadStage.LOST],
     LeadStage.MEETING: [LeadStage.PROPOSAL, LeadStage.LOST],
-    LeadStage.PROPOSAL: [LeadStage.NEGOTIATION, LeadStage.LOST],
+    LeadStage.PROPOSAL: [LeadStage.NEGOTIATION, LeadStage.WON, LeadStage.LOST],
     LeadStage.NEGOTIATION: [LeadStage.WON, LeadStage.LOST],
     LeadStage.WON: [],
     LeadStage.LOST: [LeadStage.RAW],

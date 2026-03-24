@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -69,7 +70,7 @@ PLAN_PRICING: dict[str, dict] = {
     "pro": {
         "name": "Plan Profesional",
         "monthly_cost_usd": 99,
-        "annual_cost_usd": 79,
+        "annual_cost_usd": 1188,  # Fixed: 99 * 12 instead of 79
         "max_users": 10,
         "max_leads": 5000,
         "features": [
@@ -87,7 +88,7 @@ PLAN_PRICING: dict[str, dict] = {
     "enterprise": {
         "name": "Plan Enterprise",
         "monthly_cost_usd": 499,
-        "annual_cost_usd": 399,
+        "annual_cost_usd": 5988,  # Fixed: 499 * 12 instead of 399
         "max_users": -1,  # ilimitado
         "max_leads": -1,
         "features": [
@@ -121,13 +122,24 @@ class ProposalGenerator:
         recommended_plan = self.estimate_plan(requirements)
         plan_info = PLAN_PRICING[recommended_plan]
 
+        # Extract budget hint from discovery session
+        budget_text = _get_answer_text(session, "budget_01") or ""
+        budget_hint = 0.0
+        # Try to extract a number from the budget answer
+        numbers = re.findall(r'[\d,]+(?:\.\d+)?', budget_text.replace(',', ''))
+        if numbers:
+            try:
+                budget_hint = float(numbers[0])
+            except ValueError:
+                pass
+
         executive_summary = self._build_executive_summary(session, requirements)
         scope = self._build_scope(requirements)
         modules = [r.module for r in requirements.requirements if r.module]
         modules = sorted(set(modules))
         phases = self._build_phases(requirements, recommended_plan)
         timeline = self._build_timeline(phases)
-        investment = self._build_investment(recommended_plan, phases)
+        investment = self._build_investment(recommended_plan, phases, budget_hint)
         terms = self._build_terms()
 
         return Proposal(
@@ -174,6 +186,23 @@ class ProposalGenerator:
             score += 1
 
         if len(requirements.user_stories) > 5:
+            score += 1
+
+        # Budget-aware scoring (extract from session if available)
+        # Check for enterprise signals in requirements descriptions
+        enterprise_keywords = ["enterprise", "banco", "bank", "gobierno", "government",
+                              "hospital", "mining", "oil", "telecom", "insurance"]
+        has_enterprise_signals = any(
+            any(kw in r.description.lower() for kw in enterprise_keywords)
+            for r in requirements.requirements
+        )
+        if has_enterprise_signals:
+            score += 3
+
+        # Large number of user stories indicates complex needs
+        if len(requirements.user_stories) > 8:
+            score += 2
+        elif len(requirements.user_stories) > 5:
             score += 1
 
         if score >= 7:
@@ -350,14 +379,18 @@ class ProposalGenerator:
 
         return "\n".join(lines)
 
-    def _build_investment(self, plan: str, phases: list[ProjectPhase]) -> dict:
+    def _build_investment(self, plan: str, phases: list[ProjectPhase], budget_hint: float = 0) -> dict:
         """Construye el detalle de inversión."""
         plan_info = PLAN_PRICING[plan]
         total_weeks = sum(p.duration_weeks for p in phases)
 
-        # Costo de desarrollo (estimado por semana)
-        dev_rate_per_week = 2500  # USD por semana por equipo
-        development_cost = total_weeks * dev_rate_per_week
+        # Use budget hint if available, otherwise estimate
+        if budget_hint > 0:
+            development_cost = budget_hint
+        else:
+            # Costo de desarrollo (estimado por semana)
+            dev_rate_per_week = 2500  # USD por semana por equipo
+            development_cost = total_weeks * dev_rate_per_week
 
         return {
             "plan": plan_info["name"],
